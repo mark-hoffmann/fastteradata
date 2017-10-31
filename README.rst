@@ -36,7 +36,7 @@ Additional components will continue to be worked on such as
 **Setup**
 
 Before you can use fasteradata, you must create a file in your working home directory called ".fastteradata", such that the path is "~/.fastteradata".
-This file follows json formatting rules and an example can be found `here <https://github.com/mark-hoffmann/fastteradata/blob/master/.example_fastteradata>`_.
+This file follows json formatting rules and an example can be found `here <https://github.com/mark-hoffmann/fastteradata/blob/master/.example_fastteradata>`_. All fields surround with underscores need to be updated. Don't necessary need two different environments.
 
 |
 

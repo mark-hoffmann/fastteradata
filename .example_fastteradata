@@ -1,6 +1,6 @@
 {
-"auth_dict" : {"env1" : ["usrname","password"],
-             "env2" : ["username","password"]},
-"env_dict" : {"env1":["env_url","env_long_name","env_abbr"],
-               "env2":["env_url","env_long_name","env_abbr"]}
+"auth_dict" : {"__env1__" : ["__usrname__","__password__"],
+             "__env2__" : ["__username__","__password__"]},
+"env_dict" : {"__env1__":["__env_url__","__env_long_name__","__env_abbr__"],
+               "__env2__":["__env_url__","__env_long_name__","__env_abbr__"]}
 }
