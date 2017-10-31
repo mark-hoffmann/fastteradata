@@ -20,6 +20,29 @@ def call_sub(f):
     return("")
 """
 def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata", columns = [], clean_and_pickle=True, partition_key="", partition_type="year"):
+    """
+        Summary:
+            Extracts table information from Teradata and saves / executes the appropriate files
+
+        Args:
+            abs_path (str): Absolute path where you want your scripts to reside and data and pickled subdirectories made
+            table_name (str): Teradata table name you wish to query
+            env (str): Environment that you want to connect to. (People usually have a testing and production environment)
+            db (str): Database name to connect to
+            nrows (int): *default = -1* The default of -1 means ALL rows. Otherwise, you can specificy a subset of rows such as 20
+            connector (str): *default = 'teradata'* The default uses the teradata python module to connect to the cluster. Valid options include 'teradata' and 'pyodbc'
+            columns (list(str)): *default = []* Subset of columns to use, default is all of the columns found in the metadata, however subsets can be selected by passing in ['col1','col2','col3']
+            clean_and_pickle (bool): *default = True* Refers to if you want to read the resulting data file into memory to clean and then serialize in your pickled subdirectory
+            partition_key (str): *default = ''* There is no partitioning by default. When you define a partition key, it MUST BE A DATE COLUMN AS DEFINED IN TERADATA. This breaks up the exporting
+                                    into paritions by the *partition_type* argument. This generates multiple fexp scripts and executes them in parrelel using the available cores. This helps to break
+                                    up extremely large datasets or increase speed. When a parition key is defined, after all of the partition files are finished loading from Teradata, the resulting data
+                                    is COMBINED into a SINGLE DATA FILE and finishes processing through the following cleaning, data type specification, and serializing.
+            partition_type (str): *default = 'year'* Default is to partition the partition_key by distict YEAR. Valid options include "year" or "month"
+
+        Returns:
+            Column list recieved from the metadata if clean_and_pickle is set to False, else nothing. Column names are returned in this case so you can save them and use them to read the raw data file
+                later with appropriate columns.
+    """
     import time
     import os
     try:
