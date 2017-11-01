@@ -1,9 +1,6 @@
 fastteradata
 ============
 
-.. image:: https://img.shields.io/pypi/v/fastteradata.svg
-    :target: https://pypi.python.org/pypi/fastteradata
-    :alt: Latest PyPI version
 
 
 Tools for faster and optimized interaction with Teradata and large datasets. This was initially made to make using Teradata's fast export utility easier and get around various spool space issues that may arise from large tables.
@@ -12,7 +9,7 @@ Tools for faster and optimized interaction with Teradata and large datasets. Thi
 Installation
 ------------
 
-fastteradata can easily be downloaded from Pypi package index via the following:
+fastteradata can easily be downloaded straight from github via the following:
 
 .. code-block:: python
 
