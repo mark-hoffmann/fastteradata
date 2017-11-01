@@ -16,7 +16,7 @@ fastteradata can easily be downloaded from Pypi package index via the following:
 
 .. code-block:: python
 
-  pip install fastteradata
+  pip install git+https://github.com/mark-hoffmann/fastteradata.git
 
 
 Usage
