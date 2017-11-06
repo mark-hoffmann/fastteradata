@@ -9,9 +9,13 @@ import os
 from .io_processors import *
 from ..metadata_processors.metadata_processors import *
 
-auth = json.load(open(os.path.expanduser('~/.fastteradata')))
-auth_dict = auth["auth_dict"]
-env_dict = auth["env_dict"]
+auth = {}
+auth_dict = {}
+env_dict = {}
+if os.path.exists(os.path.expanduser('~/.fastteradata')):
+    auth = json.load(open(os.path.expanduser('~/.fastteradata')))
+    auth_dict = auth["auth_dict"]
+    env_dict = auth["env_dict"]
 
 def get_unique_partitions(env,db,table,auth_dict=auth_dict,custom_auth=False,connector="teradata",partition_key="", partition_type=""):
 

@@ -5,9 +5,14 @@ import os
 
 import json
 
-auth = json.load(open(os.path.expanduser('~/.fastteradata')))
-auth_dict = auth["auth_dict"]
-env_dict = auth["env_dict"]
+auth = {}
+auth_dict = {}
+env_dict = {}
+if os.path.exists(os.path.expanduser('~/.fastteradata')):
+    auth = json.load(open(os.path.expanduser('~/.fastteradata')))
+    auth_dict = auth["auth_dict"]
+    env_dict = auth["env_dict"]
+
 
 def combine_partitioned_file(script_files):
     import os

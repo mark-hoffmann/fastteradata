@@ -5,9 +5,13 @@ import teradata
 import json
 import os
 
-auth = json.load(open(os.path.expanduser('~/.fastteradata')))
-auth_dict = auth["auth_dict"]
-env_dict = auth["env_dict"]
+auth = {}
+auth_dict = {}
+env_dict = {}
+if os.path.exists(os.path.expanduser('~/.fastteradata')):
+    auth = json.load(open(os.path.expanduser('~/.fastteradata')))
+    auth_dict = auth["auth_dict"]
+    env_dict = auth["env_dict"]
 
 def _process_metadata_fexp(df,partition_key=""):
     data_types = [] #let's calculate then put types in a list to easily add on to the df
