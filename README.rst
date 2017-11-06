@@ -1,7 +1,13 @@
 fastteradata
 ============
 
+.. image:: https://travis-ci.org/mark-hoffmann/fastteradata.png
+   :target: https://travis-ci.org/mark-hoffmann/fastteradata
+   :alt: Latest Travis CI build status
 
+.. image:: https://codecov.io/gh/mark-hoffmann/fastteradata/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/mark-hoffmann/fastteradata
+   :alt: Coverage
 
 Tools for faster and optimized interaction with Teradata and large datasets. This was initially made to make using Teradata's fast export utility easier and get around various spool space issues that may arise from large tables.
 
@@ -118,7 +124,7 @@ Requirements
 Compatibility
 -------------
 
-fastteradata currently supports Python 3.4, 3.5, and 3.6
+fastteradata currently supports Python 3.6
 
 Licence
 -------

@@ -52,19 +52,25 @@ def combine_partitioned_file(script_files):
     concat_str = concat_str.replace("\\\\","\\")
     concat_str = concat_str.replace("//","/")
     #print(concat_str)
-    call(concat_str, shell=True)
+
 
     #print(data_files)
-    #clean up old files
-    for f in data_files:
-        f = f.replace("\\\\","\\")
-        f = f.replace("//","/")
-        #print(f"{remove_cmd} {f}")
-        call(f"{remove_cmd} {f}", shell=True)
-
-    return("/".join(form))
+    #clean data_files
+    data_files = [x.replace("\\\\","\\") for x in data_files]
+    data_files = [x.replace("//","/") for x in data_files]
 
 
+    return("/".join(form), concat_str, data_files, remove_cmd)
+
+def concat_files(concat_str):
+    from subprocess import call
+    call(concat_str, shell=True)
+    return
+
+def remove_file(remove_cmd, f):
+    from subprocess import call
+    call(f"{remove_cmd} {f}", shell=True)
+    return
 
 def save_file(export_path, file_name, file_contents):
     script_path = export_path + "/script_" + file_name

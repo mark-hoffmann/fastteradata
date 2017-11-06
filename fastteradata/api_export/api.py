@@ -76,7 +76,11 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
 
         data_file = ""
         if partition_key != "":
-            data_file = combine_partitioned_file(fexp_scripts)
+            data_file, concat_str, data_files, remove_cmd = combine_partitioned_file(fexp_scripts)
+            #Concat and delete partition files
+            concat_files(concat_str)
+            for f in data_files:
+                remove_file(remove_cmd, f)
         else:
             data_file = fexp_scripts[0]
 
