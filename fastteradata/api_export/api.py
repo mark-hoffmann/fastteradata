@@ -112,7 +112,7 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
             return
         else:
             print("Finished: Your end data file is located at:")
-            print(f"{abs_path}/pickled/{raw_tbl_name}.pkl")
+            print(f"{abs_path}/data/{table_name}_export.txt")
             print("You have chosen to not clean or pickle your data and fast export does not support export column names. \
                     Be sure to gather and keep in order these column names.")
 
