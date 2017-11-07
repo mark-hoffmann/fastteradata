@@ -235,7 +235,7 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
     if len(columns) > 0:
         meta_cols = [x.lower().strip() for x in meta_df["ColumnName"].tolist()]
 
-        cols_not_found = [x for x in columns if x not in meta_cols]
+        cols_not_found = [x.lower() for x in columns if x.lower() not in meta_cols]
         if len(cols_not_found) > 0:
             print("Missing columns needed adding: ")
             print(cols_not_found)
