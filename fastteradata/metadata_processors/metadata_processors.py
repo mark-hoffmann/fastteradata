@@ -107,6 +107,7 @@ def get_table_metadata(env, db_name, tbl_name,columns = [], auth_dict=auth_dict,
 
         df = pd.read_sql(sql,conn)
         df = _process_metadata_fexp(df,partition_key=partition_key)
+        df['ColumnName'].str.lower()
         return(df)
 
     elif connector == "teradata":
@@ -117,6 +118,7 @@ def get_table_metadata(env, db_name, tbl_name,columns = [], auth_dict=auth_dict,
 
         df = pd.read_sql(sql, session)
         df = _process_metadata_fexp(df,partition_key=partition_key)
+        df['ColumnName'].str.lower()
         return(df)
     else:
         raise Exception("Wrong value error: Need to specify connector as either teradata or pyodbc")

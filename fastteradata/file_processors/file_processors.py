@@ -117,7 +117,7 @@ def generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, 
             end = False
             if i == len(columns) - 1:
                 end = True
-            sub_set = meta_df[meta_df["ColumnName"] == columns[i]]
+            sub_set = meta_df[meta_df["ColumnName"] == columns[i].lower()]
             #print(sub_set)
             select_string += coalesce_statement(columns[i], sub_set["FormattedColumnType"].values[0], end)
             if sub_set["ColumnType"].values[0] == "DA":
