@@ -3,6 +3,7 @@ import fastteradata as ftd
 
 import pandas as pd
 
+# TESTING OF THE generate_sql_main METHOD
 
 export_path = ""
 file_name = ""
@@ -80,5 +81,45 @@ def test_generate_sql_main_output_file_partition_key_month():
                                             current_partition="2016D11", partition_type="month")
     assert valid_final_partition_month == final
 
+valid_final_explicit_columns = ".LOGTABLE database1.fexplog; \n\n.LOGON /username, password; \n\n.BEGIN EXPORT; \n\n .EXPORT OUTFILE /data/ \n MODE RECORD FORMAT TEXT;\n\nSELECT CAST(\nCOALESCE(CAST(CAST(col1 AS DATE FORMAT 'YYYY-MM-DD') AS CHAR(10)),'?')\n AS CHAR(11))\nFROM database1.table1\n;\n.END EXPORT;\n\n .LOGOFF;"
+def test_generate_sql_main_output_file_explicit_columns():
+    final, col_list = ftd.generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, meta_df_dates, columns=["col1"])
 
-#def test_generate_sql_main_output_file_explicit_columns():
+    assert valid_final_explicit_columns == final
+
+def test_generate_sql_main_output_partition_key_mismatch_exception():
+    with pytest.raises(Exception):
+        ftd.generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, meta_df_dates, columns=["col1"], partition_key="invalid")
+
+
+# TESTING OF THE coalesce_statement METHOD
+
+valid_coalesce1 = "COALESCE(CAST(CAST(col1 AS DATE FORMAT 'YYYY-MM-DD') AS CHAR(10)),'?')\n"
+def test_coalesce_statement_date_end():
+    stm = ftd.coalesce_statement("col1","DATE FORMAT 'YYYY-MM-DD') AS CHAR(10)",end=True)
+    assert valid_coalesce1 == stm
+
+valid_coalesce2 = "COALESCE(CAST(CAST(col1 AS DATE FORMAT 'YYYY-MM-DD') AS CHAR(10)),'?')||'|'||\n"
+def test_coalesce_statement_date_noend():
+    stm = ftd.coalesce_statement("col1","DATE FORMAT 'YYYY-MM-DD') AS CHAR(10)",end=False)
+    assert valid_coalesce2 == stm
+
+valid_coalesce3 = "COALESCE(CAST(col1 AS CHAR(50)),'?')\n"
+def test_coalesce_statement_nodate_end():
+    stm = ftd.coalesce_statement("col1","CHAR(50)",end=True)
+    assert valid_coalesce3 == stm
+
+valid_coalesce4 = "COALESCE(CAST(col1 AS CHAR(50)),'?')||'|'||\n"
+def test_coalesce_statement_nodate_noend():
+    stm = ftd.coalesce_statement("col1","CHAR(50)",end=False)
+    assert valid_coalesce4 == stm
+
+valid_coalesce5 = "COALESCE(CAST(CAST(col1 AS FORMAT 'Z(20)Z.ZZ') AS CHAR(15)),'?')\n"
+def test_coalesce_statement_number_end():
+    stm = ftd.coalesce_statement("col1","FORMAT 'Z(20)Z.ZZ') AS CHAR(15)",end=True)
+    assert valid_coalesce5 == stm
+
+valid_coalesce6 = "COALESCE(CAST(CAST(col1 AS FORMAT 'Z(20)Z.ZZ') AS CHAR(15)),'?')||'|'||\n"
+def test_coalesce_statement_number_noend():
+    stm = ftd.coalesce_statement("col1","FORMAT 'Z(20)Z.ZZ') AS CHAR(15)",end=False)
+    assert valid_coalesce6 == stm
