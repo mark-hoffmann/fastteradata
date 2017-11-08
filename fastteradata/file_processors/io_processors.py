@@ -1,10 +1,12 @@
 import pandas as pd
 import numpy as np
 
+from ..auth.auth import read_credential_file, load_db_info
 import os
 
 import json
 
+"""
 auth = {}
 auth_dict = {}
 env_dict = {}
@@ -13,6 +15,8 @@ if os.path.exists(os.path.expanduser('~/.fastteradata')):
     auth_dict = auth["auth_dict"]
     env_dict = auth["env_dict"]
 
+"""
+auth, auth_dict, env_dict = read_credential_file()
 
 def combine_partitioned_file(script_files):
     import os

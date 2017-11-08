@@ -33,7 +33,7 @@ def get_unique_partitions(env,db,table,auth_dict=auth_dict,custom_auth=False,con
         usr = auth_dict[0]
         passw = auth_dict[1]
     """
-    env_n, env_dsn, env_short, usr, passw = load_db_info(custom_auth=custom_auth)
+    env_n, env_dsn, env_short, usr, passw = load_db_info(env, custom_auth=custom_auth)
 
 
     sql = ""
@@ -207,7 +207,7 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
         passw = auth_dict[1]
 
     """
-    env_n, env_dsn, env_short, usr, passw = load_db_info(custom_auth=custom_auth)
+    env_n, env_dsn, env_short, usr, passw = load_db_info(env, custom_auth=custom_auth)
     #Get metadata
     #print("metadata")
     meta_df = get_table_metadata(env,db,table, columns = columns, auth_dict=auth_dict, custom_auth=custom_auth, connector=connector, partition_key=partition_key)

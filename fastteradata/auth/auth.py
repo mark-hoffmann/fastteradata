@@ -13,7 +13,7 @@ def read_credential_file():
 
     return(auth, auth_dict, env_dict)
 
-def load_db_info(custom_auth=False):
+def load_db_info(env, custom_auth=False):
 
     auth, auth_dict, env_dict = read_credential_file()
 

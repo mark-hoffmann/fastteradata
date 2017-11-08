@@ -83,7 +83,7 @@ def get_table_metadata(env, db_name, tbl_name,columns = [], auth_dict=auth_dict,
         usr = auth_dict[0]
         passw = auth_dict[1]
     """
-    env_n, env_dsn, env_short, usr, passw = load_db_info(custom_auth=custom_auth)
+    env_n, env_dsn, env_short, usr, passw = load_db_info(env, custom_auth=custom_auth)
 
     if len(columns) == 0:
 
