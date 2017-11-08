@@ -5,6 +5,9 @@ import teradata
 import json
 import os
 
+from ..auth.auth import read_credential_file, load_db_info
+
+"""
 auth = {}
 auth_dict = {}
 env_dict = {}
@@ -12,6 +15,8 @@ if os.path.exists(os.path.expanduser('~/.fastteradata')):
     auth = json.load(open(os.path.expanduser('~/.fastteradata')))
     auth_dict = auth["auth_dict"]
     env_dict = auth["env_dict"]
+"""
+auth, auth_dict, env_dict = read_credential_file()
 
 def _process_metadata_fexp(df,partition_key=""):
     data_types = [] #let's calculate then put types in a list to easily add on to the df
@@ -67,7 +72,7 @@ def get_table_metadata(env, db_name, tbl_name,columns = [], auth_dict=auth_dict,
             Pandas DataFrame containing columns DatabaseName, TableName, ColumnName, ColumnFormat, ColumnLength, CharType
     """
 
-
+    """
     env_n = env_dict[env][0]
     env_dsn = env_dict[env][1]
 
@@ -77,7 +82,8 @@ def get_table_metadata(env, db_name, tbl_name,columns = [], auth_dict=auth_dict,
     else:
         usr = auth_dict[0]
         passw = auth_dict[1]
-
+    """
+    env_n, env_dsn, env_short, usr, passw = load_db_info(custom_auth=custom_auth)
 
     if len(columns) == 0:
 

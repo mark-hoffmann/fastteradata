@@ -8,7 +8,8 @@ import os
 
 from .io_processors import *
 from ..metadata_processors.metadata_processors import *
-
+from ..auth.auth import read_credential_file, load_db_info
+"""
 auth = {}
 auth_dict = {}
 env_dict = {}
@@ -17,8 +18,11 @@ if os.path.exists(os.path.expanduser('~/.fastteradata')):
     auth_dict = auth["auth_dict"]
     env_dict = auth["env_dict"]
 
-def get_unique_partitions(env,db,table,auth_dict=auth_dict,custom_auth=False,connector="teradata",partition_key="", partition_type=""):
+"""
+auth, auth_dict, env_dict = read_credential_file()
 
+def get_unique_partitions(env,db,table,auth_dict=auth_dict,custom_auth=False,connector="teradata",partition_key="", partition_type=""):
+    """
     env_n = env_dict[env][0]
     env_dsn = env_dict[env][1]
 
@@ -28,6 +32,9 @@ def get_unique_partitions(env,db,table,auth_dict=auth_dict,custom_auth=False,con
     else:
         usr = auth_dict[0]
         passw = auth_dict[1]
+    """
+    env_n, env_dsn, env_short, usr, passw = load_db_info(custom_auth=custom_auth)
+
 
     sql = ""
     if partition_type == "year":
@@ -189,7 +196,7 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
             Pandas DataFrame containing columns DatabaseName, TableName, ColumnName, ColumnFormat, ColumnLength, CharType
     """
 
-
+    """
     env_short = env_dict[env][2]
 
     if not custom_auth:
@@ -199,6 +206,8 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
         usr = auth_dict[0]
         passw = auth_dict[1]
 
+    """
+    env_n, env_dsn, env_short, usr, passw = load_db_info(custom_auth=custom_auth)
     #Get metadata
     #print("metadata")
     meta_df = get_table_metadata(env,db,table, columns = columns, auth_dict=auth_dict, custom_auth=custom_auth, connector=connector, partition_key=partition_key)
@@ -232,6 +241,7 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
 
     #Check for testing missed columns from metadata
     #Testing purposes, can eventually get rid of
+    """
     if len(columns) > 0:
         meta_cols = [x.lower().strip() for x in meta_df["ColumnName"].tolist()]
 
@@ -239,6 +249,6 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
         if len(cols_not_found) > 0:
             print("Missing columns needed adding: ")
             print(cols_not_found)
-
+    """
 
     return col_list, fast_export_scripts
