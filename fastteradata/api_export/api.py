@@ -9,16 +9,8 @@ from joblib import Parallel, delayed
 from ..file_processors.file_processors import *
 from ..file_processors.io_processors import *
 from ..metadata_processors.metadata_processors import *
-"""
-def call_sub(f):
-    import sys
-    import subprocess
-    print(f"Calling Fast Export on file...  {f}")
-    sys.stdout.flush()
-    subprocess.call(f"fexp < {f}", shell=True)
-    sys.stdout.flush()
-    return("")
-"""
+
+
 def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata", columns = [], clean_and_pickle=True, partition_key="", partition_type="year"):
     """
         Summary:

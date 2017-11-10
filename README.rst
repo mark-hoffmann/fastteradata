@@ -28,11 +28,13 @@ The main task this package accomplishes right now is export large tables faster 
 This is accomplished by connecting to a Teradata account and reading metadata about the table of interest to autogenerate and execute the appropriate fastexport script.
 You then have the option to read the data into memory to clean it and then serialize it as a pickle file with correct data types and columns.
 
+*Update 11/10/2017*
+Basic fastloading capabilities have been added for doing a fastload from a pandas dataframe
+
 
 Additional components will continue to be worked on such as
  * Better optimization of auto parrellelization
  * The ability to join different tables for an export
- * Fastloading capabilities
  * Plus popular suggestions from others in the issues
 
 
@@ -86,7 +88,7 @@ abs_path (str): Absolute path where you want your scripts to reside and data and
 
 table_name (str): Teradata table name you wish to query
 
-env (str): Environment that you want to connect to. (People usually have a testing and production environment)
+env (str): Environment that you want to connect to as specified in your .fastteradata file. (People usually have a testing and production environment)
 
 db (str): Database name to connect to
 
@@ -109,7 +111,31 @@ Column list received from the metadata if clean_and_pickle is set to False, else
 |
 |
 
+**load_table(abs_path, df, table_name, env, db, connector = "teradata", clear_table=True)**
 
+*Summary*
+
+Loads a pandas dataframe from memory into teradata via the optimized fastload functionality.
+
+*Args*
+
+abs_path (str): Absolute path where you want your scripts to reside and data and pickled subdirectories made (Most of the time should be same absolute path as the extract_table abs_path)
+
+df (pandas DataFrame): The pandas DataFrame that you want to save up to teradata
+
+table_name (str): The desired table name
+
+env (str): Environment that you want to connect to as specified in your .fastteradata file. (People usually have a testing and production environment)
+
+db (str):  Database name to connect to
+
+connector (str): *default = 'teradata'* The default uses the teradata python module to connect to the cluster. Valid options include 'teradata' and 'pyodbc'
+
+clear_table (bool): *default = 'True'* This specifies if you want the table you specify in your db to be dropped before loading in. Right now, this is the recomended way of using this function. Otherwise, you have to be sure to have the columns exactly right and error handling has not been robustly built out for that case yet.
+
+*Returns*
+
+Nothing
 
 Requirements
 ^^^^^^^^^^^^

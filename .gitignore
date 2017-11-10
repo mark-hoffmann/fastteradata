@@ -43,3 +43,8 @@ deploy_pip.sh
 
 dev_files
 ipython_dev
+test.py
+.runNumber
+logs
+data_loading
+data_loading_scripts
