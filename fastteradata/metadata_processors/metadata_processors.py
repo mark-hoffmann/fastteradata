@@ -18,6 +18,7 @@ if os.path.exists(os.path.expanduser('~/.fastteradata')):
 """
 auth, auth_dict, env_dict = read_credential_file()
 
+
 def _process_metadata_fexp(df,partition_key=""):
     data_types = [] #let's calculate then put types in a list to easily add on to the df
     #print(df.columns.tolist())
@@ -83,7 +84,7 @@ def get_table_metadata(env, db_name, tbl_name,columns = [], auth_dict=auth_dict,
         usr = auth_dict[0]
         passw = auth_dict[1]
     """
-
+    env_n, env_dsn, env_short, usr, passw = load_db_info(env)
 
     if len(columns) == 0:
 
