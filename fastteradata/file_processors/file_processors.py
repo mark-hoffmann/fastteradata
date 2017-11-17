@@ -100,7 +100,7 @@ def generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, 
             if sub_set["ColumnType"].values[0] == "DA":
                 tot_chars += 11
             else:
-                tot_chars += int(sub_set["ColumnLength"].values[0])
+                tot_chars += int(sub_set["ColumnLength"].values[0] + 1)
             col_list.append(columns[i])
 
     if partition_key != "" and partition_key not in col_list:
