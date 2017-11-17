@@ -87,7 +87,7 @@ def generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, 
             if meta_df.loc[i,"ColumnType"] == "DA":
                 tot_chars += 11
             else:
-                tot_chars += int(meta_df.loc[i,"ColumnLength"])
+                tot_chars += int(meta_df.loc[i,"ColumnLength"] + 1)
             col_list.append(meta_df.loc[i,"ColumnName"])
     else:
         for i in range(0,len(columns)):
