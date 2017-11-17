@@ -9,32 +9,28 @@ import os
 from .io_processors import *
 from ..metadata_processors.metadata_processors import *
 from ..auth.auth import read_credential_file, load_db_info
-"""
-auth = {}
-auth_dict = {}
-env_dict = {}
-if os.path.exists(os.path.expanduser('~/.fastteradata')):
-    auth = json.load(open(os.path.expanduser('~/.fastteradata')))
-    auth_dict = auth["auth_dict"]
-    env_dict = auth["env_dict"]
 
-"""
 auth, auth_dict, env_dict = read_credential_file()
 
-def get_unique_partitions(env,db,table,auth_dict=auth_dict,custom_auth=False,connector="teradata",partition_key="", partition_type=""):
-    """
-    env_n = env_dict[env][0]
-    env_dsn = env_dict[env][1]
+def connect_teradata(env, connector):
 
-    if not custom_auth:
-        usr = auth_dict[env][0]
-        passw = auth_dict[env][1]
+    env_n, env_dsn, env_short, usr, passw = load_db_info(env)
+
+    if connector == "pyodbc":
+        conn = odbc.connect('DRIVER={Teradata};VERSION=14.10;'+f"DBCNAME={env_n};DSN={env_dsn};UID={usr};PWD={passw};QUIETMODE=YES",autocommit=True)
+        return(conn)
+
+    elif connector == "teradata":
+        udaExec = teradata.UdaExec(appName="Anomaly Detection", version='1.0', odbcLibPath="/opt/teradata/client/15.10/odbc_64/lib/libodbc.so", logConsole=False)
+        session = udaExec.connect(method='odbc', system=env_n, username=usr, password=passw)
+        return(session)
     else:
-        usr = auth_dict[0]
-        passw = auth_dict[1]
-    """
-    env_n, env_dsn, env_short, usr, passw = load_db_info(env, custom_auth=custom_auth)
+        raise ValueError("Wrong value error: Need to specify connector as either teradata or pyodbc")
 
+
+def get_unique_partitions(env,db,table,auth_dict=auth_dict,custom_auth=False,connector="teradata",partition_key="", partition_type=""):
+
+    env_n, env_dsn, env_short, usr, passw = load_db_info(env, custom_auth=custom_auth)
 
     sql = ""
     if partition_type == "year":
@@ -47,45 +43,19 @@ def get_unique_partitions(env,db,table,auth_dict=auth_dict,custom_auth=False,con
     else:
         raise Exception("Invalid partition_type: Must either be year or month")
 
-
-    if connector == "pyodbc":
-        conn = odbc.connect('DRIVER={Teradata};VERSION=14.10;'+f"DBCNAME={env_n};DSN={env_dsn};UID={usr};PWD={passw};QUIETMODE=YES",autocommit=True)
-        df = pd.read_sql(sql, conn)
-        #print(df.head())
-
-        unique_list = []
-        if partition_type == "month":
-            df["yearmonth"] = df["years"].map(str) + "D" + df["months"].map(str)
-            unique_list = df["yearmonth"].tolist()
-        elif partition_type == "year":
-            unique_list = df["years"].tolist()
-        else:
-            raise Exception("Invalid partition_type: must be year or month")
-
-        return(unique_list)
-
-    elif connector == "teradata":
-        udaExec = teradata.UdaExec(appName="Anomaly Detection", version='1.0', odbcLibPath="/opt/teradata/client/15.10/odbc_64/lib/libodbc.so", logConsole=False)
-        #print("Connecting to ...")
-        session = udaExec.connect(method='odbc', system=env_n, username=usr, password=passw)
-        #print("Connected!")
-        df = pd.read_sql(sql, session)
-
-        unique_list = []
-        if partition_type == "month":
-            df["yearmonth"] = df["years"].map(str) + "D" + df["months"].map(str)
-            unique_list = df["yearmonth"].tolist()
-        elif partition_type == "year":
-            unique_list = df["years"].tolist()
-        else:
-            raise Exception("Invalid parrition_type: must be year or month")
-
-        return(unique_list)
+    conn = connect_teradata(env, connector)
+    df = pd.read_sql(sql, conn)
+    unique_list = []
+    if partition_type == "month":
+        df["yearmonth"] = df["years"].map(str) + "D" + df["months"].map(str)
+        unique_list = df["yearmonth"].tolist()
+    elif partition_type == "year":
+        unique_list = df["years"].tolist()
     else:
-        raise Exception("Wrong value error: Need to specify connector as either teradata or pyodbc")
+        raise Exception("Invalid partition_type: must be year or month")
 
+    return(unique_list)
 
-    return
 
 
 
