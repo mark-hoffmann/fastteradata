@@ -35,9 +35,10 @@ def prep_load_table(df, table_name, env, db, connector, clear_table):
     cols = ""
     for col, col_type in col_type_zip:
         t = ""
-        if col_type == "object":
+
+        if col_type.str == "|O":
             t = "varchar(80) "
-        elif (("<M8" in col_type) or ("datetime" in col_type)):
+        elif (("<M8" in col_type.str) or ("datetime" in col_type.str)):
             t = "date format 'YYYY-MM-DD' "
         else:
             "numeric(12,2) "

@@ -99,7 +99,7 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
                         _df[col] =  pd.to_datetime(_df[col], format='%Y-%m-%d')
                     except:
                         pass
-                if "_id" in col:
+                if (("_id" in col) or ("_key" in col)):
                     try:
                         force_string(_df,col)
                     except:
