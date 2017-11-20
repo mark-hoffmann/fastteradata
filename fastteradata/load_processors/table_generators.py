@@ -41,7 +41,7 @@ def prep_load_table(df, table_name, env, db, connector, clear_table):
         elif (("<M8" in col_type.str) or ("datetime" in col_type.str)):
             t = "date format 'YYYY-MM-DD' "
         else:
-            "numeric(12,2) "
+            t = "numeric(12,2) "
 
         cols += f"{col} {t} "
         if col != df.columns.tolist()[-1]:
@@ -54,7 +54,7 @@ def prep_load_table(df, table_name, env, db, connector, clear_table):
             conn.execute(f"drop table {db}.err2;")
         except:
             pass
-        conn.execute(f"create table {db}.{table_name} ({cols}) primary index({df.columns.tolist()[0]});")
+        conn.execute(f"create table {db}.{table_name} ({cols}) no primary index;")
     else:
         print("Attempting to load table without clearing. If an error occurs it's most likely due to a column mismatch.")
         print("It is recomended to fast load whole tables")
