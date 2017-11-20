@@ -222,3 +222,10 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
     """
 
     return col_list, fast_export_scripts
+
+def force_string(df, series):
+    try:
+        df[series] = df[series].map(lambda x: '{:.0f}'.format(x))
+    except:
+        pass
+    return

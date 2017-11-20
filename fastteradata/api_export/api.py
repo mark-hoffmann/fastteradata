@@ -91,6 +91,19 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
             _df.replace("?",np.nan,inplace=True)
             _df.replace("",np.nan,inplace=True)
 
+            #Try to find date looking columns and cast them appropriately (We know the format of the date because we are explicit about it in the fastexport script)
+            #Try to find id columns and convert to strings proactively
+            for col in _df.columns.tolist():
+                if "_dt" in col:
+                    try:
+                        _df[col] =  pd.to_datetime(_df[col], format='%Y-%m-%d')
+                    except:
+                        pass
+                if "_id" in col:
+                    try:
+                        force_string(_df,col)
+                    except:
+                        pass
             print("Pickling data....")
 
             _df.to_pickle(f"{abs_path}/pickled/{table_name}.pkl")

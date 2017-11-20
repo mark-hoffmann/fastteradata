@@ -34,7 +34,14 @@ def prep_load_table(df, table_name, env, db, connector, clear_table):
     col_type_zip = zip(df.columns.tolist(),df.dtypes.tolist())
     cols = ""
     for col, col_type in col_type_zip:
-        t = "varchar(80) " if col_type == "object" else "numeric(12,2) "
+        t = ""
+        if col_type == "object":
+            t = "varchar(80) "
+        elif (("<M8" in col_type) or ("datetime" in col_type)):
+            t = "date format 'YYYY-MM-DD' "
+        else:
+            "numeric(12,2) "
+
         cols += f"{col} {t} "
         if col != df.columns.tolist()[-1]:
             cols += ","
