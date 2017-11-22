@@ -21,7 +21,8 @@ partition_type = "year"
 meta_df = pd.DataFrame.from_dict({"ColumnName":["col1","  col2 "],
             "ColumnLength":[31,20],
             "FormattedColumnType":["CHAR(31)","CHAR(20)"],
-            "ColumnType":["CV","CF"]})
+            "ColumnType":["CV","CF"],
+            "CharType":[1,1]})
 
 valid_final = ".LOGTABLE database1.fexplog; \n\n.LOGON /username, password; \n\n.BEGIN EXPORT; \n\n .EXPORT OUTFILE /data/ \n MODE RECORD FORMAT TEXT;\n\nSELECT TOP 10 CAST(\nCOALESCE(CAST(col1 AS CHAR(31)),'?')||'|'||\nCOALESCE(CAST(col2 AS CHAR(20)),'?')\n AS CHAR(53))\nFROM database1.table1\n;\n.END EXPORT;\n\n .LOGOFF;"
 valid_col_list = ["col1","col2"]
@@ -43,7 +44,8 @@ def test_generate_sql_main_output_file_simple_final():
 meta_df_dates = pd.DataFrame.from_dict({"ColumnName":["col1","  col2 "],
             "ColumnLength":[12,8],
             "FormattedColumnType":["DATE FORMAT 'YYYY-MM-DD') AS CHAR(10)","CHAR(8)"],
-            "ColumnType":["DA","CF"]})
+            "ColumnType":["DA","CF"],
+            "CharType":[1,1]})
 valid_final_dates = ".LOGTABLE database1.fexplog; \n\n.LOGON /username, password; \n\n.BEGIN EXPORT; \n\n .EXPORT OUTFILE /data/ \n MODE RECORD FORMAT TEXT;\n\nSELECT TOP 10 CAST(\nCOALESCE(CAST(CAST(col1 AS DATE FORMAT 'YYYY-MM-DD') AS CHAR(10)),'?')||'|'||\nCOALESCE(CAST(col2 AS CHAR(8)),'?')\n AS CHAR(20))\nFROM database1.table1\n;\n.END EXPORT;\n\n .LOGOFF;"
 
 def test_generate_sql_main_output_file_date_columns():
@@ -114,12 +116,12 @@ def test_coalesce_statement_nodate_noend():
     stm = ftd.coalesce_statement("col1","CHAR(50)",end=False)
     assert valid_coalesce4 == stm
 
-valid_coalesce5 = "COALESCE(CAST(CAST(col1 AS FORMAT 'Z(20)Z.ZZ') AS CHAR(15)),'?')\n"
+valid_coalesce5 = "COALESCE(CAST(col1 AS DECIMAL(12,2) FORMAT 'Z99999999999.99') AS CHAR(15)),'?')\n"
 def test_coalesce_statement_number_end():
-    stm = ftd.coalesce_statement("col1","FORMAT 'Z(20)Z.ZZ') AS CHAR(15)",end=True)
+    stm = ftd.coalesce_statement("col1","DECIMAL(12,2) FORMAT 'Z99999999999.99') AS CHAR(15)",end=True)
     assert valid_coalesce5 == stm
 
-valid_coalesce6 = "COALESCE(CAST(CAST(col1 AS FORMAT 'Z(20)Z.ZZ') AS CHAR(15)),'?')||'|'||\n"
+valid_coalesce6 = "COALESCE(CAST(col1 AS DECIMAL(12,2) FORMAT 'Z99999999999.99') AS CHAR(15)),'?')||'|'||\n"
 def test_coalesce_statement_number_noend():
-    stm = ftd.coalesce_statement("col1","FORMAT 'Z(20)Z.ZZ') AS CHAR(15)",end=False)
+    stm = ftd.coalesce_statement("col1","DECIMAL(12,2) FORMAT 'Z99999999999.99') AS CHAR(15)",end=False)
     assert valid_coalesce6 == stm
