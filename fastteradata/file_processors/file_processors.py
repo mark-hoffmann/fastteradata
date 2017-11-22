@@ -86,6 +86,8 @@ def generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, 
             select_string += coalesce_statement(meta_df.loc[i,"ColumnName"], meta_df.loc[i,"FormattedColumnType"], end)
             if meta_df.loc[i,"ColumnType"] == "DA":
                 tot_chars += 11
+            elif meta_df.loc[i,"ColumnType"] != "DA" and meta_df.loc[i,"CharType"] == 0:
+                tot_chars += 15
             else:
                 tot_chars += int(meta_df.loc[i,"ColumnLength"] + 1)
             col_list.append(meta_df.loc[i,"ColumnName"])
@@ -134,7 +136,7 @@ def coalesce_statement(var, dtype, end=False):
     if not end:
         end_s = "||'|'||\n"
 
-    if dtype not in ["DATE FORMAT 'YYYY-MM-DD') AS CHAR(10)","FORMAT 'Z(20)Z.ZZ') AS CHAR(15)"]:
+    if dtype not in ["DATE FORMAT 'YYYY-MM-DD') AS CHAR(10)","DECIMAL(12,2) FORMAT 'Z99999999999.99') AS CHAR(15)"]:
         coal_s = "COALESCE(CAST(" + var + " AS " + dtype + "),'?')" + end_s
     else:
         coal_s = "COALESCE(CAST(CAST(" + var + " AS " + dtype + "),'?')" + end_s

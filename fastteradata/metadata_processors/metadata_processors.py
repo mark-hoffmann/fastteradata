@@ -34,7 +34,7 @@ def _process_metadata_fexp(df,partition_key=""):
                 length = int(length)
                 data_types.append(f"CHAR({length})")
             elif col_type != "DA" and char_type == 0:
-                data_types.append("FORMAT 'Z(20)Z.ZZ') AS CHAR(15)")
+                data_types.append("DECIMAL(12,2) FORMAT 'Z99999999999.99') AS CHAR(15)")
             else:
                 #nums = df.loc[i,"ColumnFormat"].replace("-","").replace("(","").strip().split(")")
                 #MAKE SURE TO HANDLE DATE CASE WHEN APPENDING STRINGS for parentheses
