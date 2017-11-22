@@ -80,12 +80,13 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
 
         if clean_and_pickle:
             print("Reading Table into memory...")
-            _df = pd.read_csv(f"{abs_path}/data/{table_name}_export.txt", names=col_list, sep="|")
+            #Need low_memory flag or else with large datasets we will end up with mixed datatypes
+            _df = pd.read_csv(f"{abs_path}/data/{table_name}_export.txt", names=col_list, sep="|", low_memory=False)
             print("Cleaning data...")
             for col in _df.columns.tolist():
                 if _df[col].dtype == "object":
                     _df[col] = _df[col].str.strip()
-                    _df[col] = _df[col].apply(lambda x: np.nan if ((pd.notnull(x)) and ('missing' in x.lower())) else x)
+                    _df[col] = _df[col].apply(lambda x: np.nan if pd.isnull(x) else np.nan if ('missing' in x.lower()) else x)
             _df.replace("~",np.nan,inplace=True)
             _df.replace("!",np.nan,inplace=True)
             _df.replace("?",np.nan,inplace=True)
@@ -99,9 +100,13 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
                         _df[col] =  pd.to_datetime(_df[col], format='%Y-%m-%d')
                     except:
                         pass
-                if (("_id" in col) or ("_key" in col)):
+                if (("_id" in col) or ("_key" in col) or ("_cd" in col)):
                     try:
+                        print("before force string")
+                        check_nulls(_df["EPI_ID"])
                         force_string(_df,col)
+                        print("after force string")
+                        check_nulls(_df["EPI_ID"])
                     except:
                         pass
             print("Pickling data....")

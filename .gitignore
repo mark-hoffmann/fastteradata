@@ -44,6 +44,7 @@ deploy_pip.sh
 dev_files
 ipython_dev
 test.py
+/__init__.py
 .runNumber
 logs
 data_loading
