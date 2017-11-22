@@ -1,5 +1,5 @@
 import pytest
-from  ..fastteradata import *
+from  fastteradata import *
 
 import pandas as pd
 

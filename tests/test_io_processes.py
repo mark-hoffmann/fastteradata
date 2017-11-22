@@ -1,5 +1,5 @@
 import pytest
-from  ..fastteradata import *
+from  fastteradata import *
 
 script_files = ['C:/Users/u374781/Desktop/FastTeradata/dev_files/TEMP/script_CNSLDTD_DRUG_OKLAHOMA_2013_export.txt', \
                 'C:/Users/u374781/Desktop/FastTeradata/dev_files/TEMP/script_CNSLDTD_DRUG_OKLAHOMA_2014_export.txt', \
