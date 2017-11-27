@@ -103,7 +103,7 @@ def generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, 
             if sub_set["ColumnType"].values[0] == "DA":
                 tot_chars += 11
             elif sub_set["ColumnType"].values[0] != "DA" and int(sub_set["CharType"].values[0]) == 0:
-                chs = int(sub_set["FormattedColumnType"].split("(")[-1].split(")")[0]) + 3
+                chs = int(sub_set["FormattedColumnType"].values[0].split("(")[-1].split(")")[0]) + 3
                 tot_chars += chs
             else:
                 tot_chars += int(sub_set["ColumnLength"].values[0] + 1)
@@ -140,7 +140,7 @@ def coalesce_statement(var, dtype, end=False):
     if not end:
         end_s = "||'|'||\n"
 
-    if (s != "DATE FORMAT 'YYYY-MM-DD') AS CHAR(10)") and ("DECIMAL" not in s):
+    if (dtype != "DATE FORMAT 'YYYY-MM-DD') AS CHAR(10)") and ("DECIMAL" not in dtype):
         coal_s = "COALESCE(CAST(" + var + " AS " + dtype + "),'?')" + end_s
     else:
         coal_s = "COALESCE(CAST(CAST(" + var + " AS " + dtype + "),'?')" + end_s

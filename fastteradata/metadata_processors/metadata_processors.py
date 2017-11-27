@@ -57,7 +57,6 @@ def _process_metadata_fexp(df,partition_key=""):
                     raise Exception("Partition Key specified is not label as a date in specified database. Parition must be a date.")
         else:
             df.drop(i, inplace=True)
-
     #print("after dropping length: " + str(len(df)))
     df.reset_index(inplace=True)
     df["FormattedColumnType"] = data_types
