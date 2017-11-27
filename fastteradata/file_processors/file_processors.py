@@ -86,7 +86,7 @@ def generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, 
             select_string += coalesce_statement(meta_df.loc[i,"ColumnName"], meta_df.loc[i,"FormattedColumnType"], end)
             if meta_df.loc[i,"ColumnType"] == "DA":
                 tot_chars += 11
-            elif meta_df.loc[i,"ColumnType"] != "DA" and meta_df.loc[i,"CharType"] == 0:
+            elif meta_df.loc[i,"ColumnType"] != "DA" and int(meta_df.loc[i,"CharType"]) == 0:
                 chs = int(meta_df.loc[i,"FormattedColumnType"].split("(")[-1].split(")")[0]) + 3
                 tot_chars += chs
             else:
@@ -102,7 +102,7 @@ def generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, 
             select_string += coalesce_statement(columns[i], sub_set["FormattedColumnType"].values[0], end)
             if sub_set["ColumnType"].values[0] == "DA":
                 tot_chars += 11
-            elif sub_set["ColumnType"].values[0] != "DA" and sub_set["CharType"].values[0] == 0:
+            elif sub_set["ColumnType"].values[0] != "DA" and int(sub_set["CharType"].values[0]) == 0:
                 chs = int(sub_set["FormattedColumnType"].split("(")[-1].split(")")[0]) + 3
                 tot_chars += chs
             else:
