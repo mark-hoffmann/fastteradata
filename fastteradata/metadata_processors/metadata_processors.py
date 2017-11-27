@@ -34,9 +34,13 @@ def _process_metadata_fexp(df,partition_key=""):
                 length = int(length)
                 data_types.append(f"CHAR({length})")
             elif col_type != "DA" and char_type == 0:
-                print(df.loc[i,"DecimalTotalDigits"])
-                print(int(df.loc[i,"DecimalTotalDigits"]))
-                dec_digits = int(df.loc[i,"DecimalTotalDigits"])
+                #print(df.loc[i,"DecimalTotalDigits"])
+                #print(int(df.loc[i,"DecimalTotalDigits"]))
+                dec_digits = 9
+                try:
+                    dec_digits = int(df.loc[i,"DecimalTotalDigits"])
+                except:
+                    pass
                 form = (dec_digits-1) * '9'
                 chars = dec_digits + 3
                 data_types.append(f"DECIMAL({dec_digits},2) FORMAT 'Z{form}.99') AS CHAR({chars})")
