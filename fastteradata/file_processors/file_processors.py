@@ -101,6 +101,8 @@ def generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, 
             select_string += coalesce_statement(columns[i], sub_set["FormattedColumnType"].values[0], end)
             if sub_set["ColumnType"].values[0] == "DA":
                 tot_chars += 11
+            elif sub_set["ColumnType"].values[0] != "DA" and sub_set["CharType"].values[0] == 0:
+                tot_chars += 15
             else:
                 tot_chars += int(sub_set["ColumnLength"].values[0] + 1)
             col_list.append(columns[i])

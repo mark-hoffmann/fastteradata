@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="fastteradata",
-    version="0.2.9",
+    version="0.2.10",
     url="https://github.com/mark-hoffmann/fastteradata",
 
     author="Mark Hoffmann",
