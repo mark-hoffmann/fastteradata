@@ -1,8 +1,14 @@
 import setuptools
 
+with open('fastteradata/__init__.py') as fid:
+    for line in fid:
+        if line.startswith('__version__'):
+            VERSION = line.strip().split()[-1][1:-1]
+            break
+
 setuptools.setup(
     name="fastteradata",
-    version="0.2.18",
+    version=VERSION,
     url="https://github.com/mark-hoffmann/fastteradata",
 
     author="Mark Hoffmann",
