@@ -30,11 +30,11 @@ def _process_metadata_fexp(df,partition_key=""):
             length = df.loc[i,"ColumnLength"] + 1
             col_type = df.loc[i,"ColumnType"]
             char_type = df.loc[i,"CharType"]
-            dec_digits = int(df.loc[i,"DecimalTotalDigits"])
             if col_type != "DA" and char_type >= 1:
                 length = int(length)
                 data_types.append(f"CHAR({length})")
             elif col_type != "DA" and char_type == 0:
+                dec_digits = int(df.loc[i,"DecimalTotalDigits"])
                 form = (dec_digits-1) * '9'
                 chars = dec_digits + 3
                 data_types.append(f"DECIMAL({dec_digits},2) FORMAT 'Z{form}.99') AS CHAR({chars})")
