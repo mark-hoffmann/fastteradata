@@ -140,7 +140,7 @@ def coalesce_statement(var, dtype, end=False):
     if not end:
         end_s = "||'|'||\n"
 
-    if (dtype not "DATE FORMAT 'YYYY-MM-DD') AS CHAR(10)") and ("DECIMAL" not in dtype):
+    if (s != "DATE FORMAT 'YYYY-MM-DD') AS CHAR(10)") and ("DECIMAL" not in s):
         coal_s = "COALESCE(CAST(" + var + " AS " + dtype + "),'?')" + end_s
     else:
         coal_s = "COALESCE(CAST(CAST(" + var + " AS " + dtype + "),'?')" + end_s
