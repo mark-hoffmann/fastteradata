@@ -30,7 +30,7 @@ def _process_metadata_fexp(df,partition_key=""):
             length = df.loc[i,"ColumnLength"] + 1
             col_type = df.loc[i,"ColumnType"]
             char_type = df.loc[i,"CharType"]
-            dec_digits = df.loc[i,"DecimalTotalDigits"]
+            dec_digits = int(df.loc[i,"DecimalTotalDigits"])
             if col_type != "DA" and char_type >= 1:
                 length = int(length)
                 data_types.append(f"CHAR({length})")
