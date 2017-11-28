@@ -92,6 +92,9 @@ def generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, 
             else:
                 tot_chars += int(meta_df.loc[i,"ColumnLength"] + 1)
             col_list.append(meta_df.loc[i,"ColumnName"])
+        print("COLUMN LIST")
+        print(col_list)
+        print(select_string)
     else:
         for i in range(0,len(columns)):
             end = False

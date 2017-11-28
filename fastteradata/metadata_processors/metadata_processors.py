@@ -37,13 +37,23 @@ def _process_metadata_fexp(df,partition_key=""):
                 #print(df.loc[i,"DecimalTotalDigits"])
                 #print(int(df.loc[i,"DecimalTotalDigits"]))
                 dec_digits = 9
+                dec_fractional = 0
                 try:
                     dec_digits = int(df.loc[i,"DecimalTotalDigits"])
                 except:
+                    dec_digits = int(df.loc[i,"ColumnLength"])
+                    pass
+                try:
+                    dec_fractional = int(df.loc[i,"DecimalFractionalDigits"])
+                except:
+                    dec_fractional = 0
                     pass
                 form = (dec_digits-1) * '9'
-                chars = dec_digits + 3
-                data_types.append(f"DECIMAL({dec_digits},2) FORMAT 'Z{form}.99') AS CHAR({chars})")
+                chars = dec_digits + dec_fractional + 1
+                dec_form = dec_fractional * '9'
+                if len(dec_form) > 0:
+                    dec_form = "." + dec_form
+                data_types.append(f"DECIMAL({dec_digits},{dec_fractional}) FORMAT 'Z{form}{dec_form}') AS CHAR({chars})")
             else:
                 #nums = df.loc[i,"ColumnFormat"].replace("-","").replace("(","").strip().split(")")
                 #MAKE SURE TO HANDLE DATE CASE WHEN APPENDING STRINGS for parentheses
@@ -61,7 +71,7 @@ def _process_metadata_fexp(df,partition_key=""):
     df.reset_index(inplace=True)
     df["FormattedColumnType"] = data_types
     #df.drop(["ColumnFormat","ColumnLength","CharType"], axis=1, inplace=True)
-
+    print(df)
     return(df)
 
 def get_table_metadata(env, db_name, tbl_name,columns = [], auth_dict=auth_dict, custom_auth=False, connector="teradata",partition_key=""):
