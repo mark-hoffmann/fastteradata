@@ -153,7 +153,7 @@ def coalesce_statement(var, dtype, end=False):
 
 def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=auth_dict,
                            custom_auth=False, nrows=-1,connector="teradata",
-                           partition_key="", partition_type="year", execute=True):
+                           partition_key="", partition_type="year", execute=True, primary_keys=[]):
     """
         Summary:
             Parses the information for a valid database table and writes script to output file
@@ -175,17 +175,7 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
             Pandas DataFrame containing columns DatabaseName, TableName, ColumnName, ColumnFormat, ColumnLength, CharType
     """
 
-    """
-    env_short = env_dict[env][2]
 
-    if not custom_auth:
-        usr = auth_dict[env][0]
-        passw = auth_dict[env][1]
-    else:
-        usr = auth_dict[0]
-        passw = auth_dict[1]
-
-    """
     env_n, env_dsn, env_short, usr, passw = load_db_info(env, custom_auth=custom_auth)
     #Get metadata
     #print("metadata")
@@ -195,32 +185,65 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
     #print("unique_partitions")
 
     #Making changes here to accomodate horizontal scaling. To start off, we will just check that if we need to do horizontal scaling, you will not be able to use a partition Key
-    
+    did_partition = False  #Partition flag to pass through for appropriate processing
+    MAX_COLS = 5
+    tot_columns = len(meta_df["ColumnName"].apply(lambda x: x.lower().strip()).unique())
+
 
     unique_partitions = []
-    if partition_key != "":
+    if partition_key != "" and tot_columns <= MAX_COLS:
         print("Getting Unique Partitions")
         unique_partitions = get_unique_partitions(env,db,table,auth_dict=auth_dict,custom_auth=custom_auth,connector=connector,partition_key=partition_key, partition_type=partition_type)
+        did_partition = True
+    elif partition_key != "" and tot_columns > MAX_COLS:
+        print("Cannot create vertical partition because horizontal partitioning is required. Creating horizontal partitions instead.")
+
+
+
 
 
     final = ""
     col_list = []
     fast_export_scripts = []
     file_name = table
-    if partition_key == "":
+    if did_partition == False and partition_key == "" and tot_columns <= MAX_COLS:
         _fname = file_name + "_export.txt"
         final, col_list = generate_sql_main(export_path, _fname, env_short, usr, passw, db, table, meta_df, columns=columns, nrows=nrows)
         #Save fast export file
         script_path = save_file(export_path, _fname, final)
         fast_export_scripts.append(script_path)
-    else:
+    elif did_partition == True and partition_key != "" and tot_columns <= MAX_COLS:
+        #process the normal vertical partitioning
         for part in unique_partitions:
             _fname = file_name + "_" + str(part) + "_export.txt"
             final, col_list = generate_sql_main(export_path, _fname, env_short, usr, passw, db, table, meta_df, columns=columns, nrows=nrows, partition_key=partition_key, current_partition=part, partition_type=partition_type)
             #Save fast export file
             script_path = save_file(export_path, _fname, final)
             fast_export_scripts.append(script_path)
+    elif tot_columns > MAX_COLS:
+        if not isinstance(primary_keys, list):
+            raise Exception("'primary_keys' must be a list, even if a single key")
+        if len(primary_keys) == 0:
+            raise Exception("Horizontal Partitioning is being attempted without a 'primary_keys' argument. Specify the list of primary_keys to execute this pull.")
+        print("MAX_COLS exceeded: creating horizontal paritions to accomodate")
+        def col_lookup(meta_df, i, tot_columns, MAX_COLS):
+            low_index = i*MAX_COLS
+            high_index = min((i+1)*MAX_COLS, tot_columns)
 
+            cols = meta_df["ColumnName"].apply(lambda x: x.lower().strip()).unique().tolist()[low_index:high_index]
+            #cols = df2.columns.tolist()[low_index:high_index]
+            return(cols)
+
+        for i in range(0,(tot_columns // MAX_COLS)+1):
+            cols = col_lookup(meta_df, i, tot_columns, MAX_COLS) + primary_keys  #use the columns in our iteration and add on the specified primary keys so that we can recombine later
+            cols = list(set(cols)) #reduce the columns to unique if one of our primary keys is repeated
+            _fname = file_name + "_" + str(i) + "_export.txt"
+            final, this_col_list = generate_sql_main(export_path, _fname, env_short, usr, passw, db, table, meta_df, columns=cols, nrows=nrows)
+            col_list.append(this_col_list) #Since this case will have multiple col_lists, we create a list of lists to pass through
+            #Save fast export file
+            script_path = save_file(export_path, _fname, final)
+            fast_export_scripts.append(script_path)
+            did_partition = True
 
     #Check for testing missed columns from metadata
     #Testing purposes, can eventually get rid of
@@ -234,7 +257,7 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
             print(cols_not_found)
     """
 
-    return col_list, fast_export_scripts
+    return col_list, fast_export_scripts, did_partition
 
 def force_string(df, series):
     try:

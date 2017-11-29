@@ -71,7 +71,7 @@ def _process_metadata_fexp(df,partition_key=""):
     df.reset_index(inplace=True)
     df["FormattedColumnType"] = data_types
     #df.drop(["ColumnFormat","ColumnLength","CharType"], axis=1, inplace=True)
-    print(df)
+    #print(df)
     return(df)
 
 def get_table_metadata(env, db_name, tbl_name,columns = [], auth_dict=auth_dict, custom_auth=False, connector="teradata",partition_key=""):

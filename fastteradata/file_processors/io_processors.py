@@ -18,21 +18,40 @@ if os.path.exists(os.path.expanduser('~/.fastteradata')):
 """
 auth, auth_dict, env_dict = read_credential_file()
 
-def combine_partitioned_file(script_files):
+def combine_files_base(combine_type=None):
     import os
     concat_str = ""
     file_delim = ""
     remove_cmd = ""
     #Making special exceptions for windows computers
     if os.name == "nt":
-        concat_str += "type "
         file_delim = "\\"
         remove_cmd = "del "
     else:
-        concat_str += "cat "
         file_delim = "/"
         remove_cmd = "rm "
+    if combine_type == "vertical":
+        if os.name == "nt":
+            concat_str += "type "
+        else:
+            concat_str += "cat "
+    elif combine_type == "horizontal":
+        #because windoes does not have a nice way to do this, we are going to read in and combine in python instead
+        """
+        if os.name == "nt":
+            concat_str += " "
+        else:
+            concat_str += "paste -d '|' "
+        """
+        concat_str = False
+    else:
+        raise Exception("Internal Bug: Invalid combine_type")
 
+    return(concat_str, file_delim, remove_cmd)
+
+def combine_partitioned_file(script_files, combine_type=""):
+
+    concat_str, file_delim, remove_cmd = combine_files_base(combine_type=combine_type)
     #First we need to add data into the file path to locate our correct files
     data_files = []
     for file in script_files:
@@ -41,12 +60,14 @@ def combine_partitioned_file(script_files):
         l[-1] = l[-1][7:]
         data_files.append(file_delim.join(l))
 
-    for f in data_files:
-        concat_str += f"{f} "
+
 
     #Now Build up concat string
     #Remove the partition value from the filepath
-    concat_str += "> "
+    if concat_str:
+        for f in data_files:
+            concat_str += f"{f} "
+        concat_str += "> "
     form = data_files[0].split("/")
     last_form  = form[-1].split("_")
     del last_form[-2]
@@ -54,12 +75,12 @@ def combine_partitioned_file(script_files):
     form[-1] = fixed
 
     #join and execute command
-    concat_str += file_delim.join(form)
-    from subprocess import call
-    c = concat_str.split(" ")
-    #print("concat stringg.....")
-    concat_str = concat_str.replace("\\\\","\\")
-    concat_str = concat_str.replace("//","/")
+    if concat_str:
+        concat_str += file_delim.join(form)
+        c = concat_str.split(" ")
+        #print("concat stringg.....")
+        concat_str = concat_str.replace("\\\\","\\")
+        concat_str = concat_str.replace("//","/")
     #print(concat_str)
 
 
@@ -69,12 +90,35 @@ def combine_partitioned_file(script_files):
     data_files = [x.replace("//","/") for x in data_files]
 
 
-    return("/".join(form), concat_str, data_files, remove_cmd)
+    return(concat_str, data_files, remove_cmd)
+
+
 
 def concat_files(concat_str):
     from subprocess import call
     call(concat_str, shell=True)
     return
+
+def concat_files_horizontal(data_file, data_files, col_list, primary_keys):
+    _df = pd.DataFrame()
+    #Combine data files in memory
+    print("Concatenating Horizontally")
+    for clist, d_file in zip(col_list,data_files):
+        #print(d_file)
+        #print(clist)
+        #print(primary_keys)
+        df = pd.read_csv(d_file, names=clist, sep="|", low_memory=False)
+        #print(df)
+        if len(_df) == 0:
+            _df = df
+        else:
+            _df = pd.merge(_df,df, how="inner", right_on=primary_keys,left_on=primary_keys)
+
+    #save dataframe from memory into a text file in the appropriate place
+    print("Saving Horizontal concatenation file out")
+    _df.to_csv(data_file,sep="|",index=False, header=None)
+
+    return(_df)
 
 def remove_file(remove_cmd, f):
     from subprocess import call
