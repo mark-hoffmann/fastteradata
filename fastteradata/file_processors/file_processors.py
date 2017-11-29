@@ -193,12 +193,16 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
 
     #If we have a partition key, we need to find the unique years for the date key
     #print("unique_partitions")
+
+    #Making changes here to accomodate horizontal scaling. To start off, we will just check that if we need to do horizontal scaling, you will not be able to use a partition Key
+    
+
     unique_partitions = []
     if partition_key != "":
         print("Getting Unique Partitions")
         unique_partitions = get_unique_partitions(env,db,table,auth_dict=auth_dict,custom_auth=custom_auth,connector=connector,partition_key=partition_key, partition_type=partition_type)
 
-    #print("after")
+
     final = ""
     col_list = []
     fast_export_scripts = []
