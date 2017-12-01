@@ -26,7 +26,7 @@ Usage
 -----
 The main task this package accomplishes right now is export large tables faster and easier than trying to load them directly.
 This is accomplished by connecting to a Teradata account and reading metadata about the table of interest to autogenerate and execute the appropriate fastexport script.
-You then have the option to read the data into memory to clean it and then serialize it as a pickle file with correct data types and columns.
+You then have the option to read the data into memory to clean it and then serialize it as a feather or pickle file with correct data types and columns.
 
 *Update 11/10/2017*
 Basic fastloading capabilities have been added for doing a fastload from a pandas dataframe
@@ -58,13 +58,13 @@ An example of exporting is as follows:
    ftd.extract_table("/absolute/path/to/output", "TABLE_NAME", "ENV_NAME", "DB_NAME", nrows=50, connector="pyodbc")
 
 This particular call will
- * Create a *data* and *pickled* folder in the directory of your absolute path argument
+ * Create a *data* and *serialized* folder in the directory of your absolute path argument
  * Connect to Teradata via the connector "pyodbc"
  * Read metadata about the table
  * Generate a fast export script in your absolute path directory
  * Execute the script and populate a data file with the first 50 rows of the table into the data/ subdirectory
  * Read in the data file and attempt to clean it with np.nans where appropriate as well as appropriate typecasting
- * Save the resulting pandas dataframe into the pickled/ subdirectory
+ * Save the resulting pandas dataframe into the serialized/ subdirectory
 
 |
 |
@@ -95,7 +95,7 @@ While this project is small, the method signatures can be found below. If this s
 
 |
 
-**extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata", columns = [], clean_and_pickle=True, partition_key="", partition_type="year")**
+**extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata", columns = [], clean_and_serialize="feather", partition_key="", partition_type="year")**
 
 *Summary*
 
@@ -103,7 +103,7 @@ Extracts table information from Teradata and saves / executes the appropriate fi
 
 *Args*
 
-abs_path (str): Absolute path where you want your scripts to reside and data and pickled subdirectories made
+abs_path (str): Absolute path where you want your scripts to reside and data and serialized subdirectories made
 
 table_name (str): Teradata table name you wish to query
 
@@ -117,7 +117,7 @@ connector (str): *default = 'teradata'* The default uses the teradata python mod
 
 columns (list(str)): *default = []* Subset of columns to use, default is all of the columns found in the metadata, however subsets can be selected by passing in ['col1','col2','col3']
 
-clean_and_pickle (bool): *default = True* Refers to if you want to read the resulting data file into memory to clean and then serialize in your pickled subdirectory
+clean_and_serialize (str): *default = "feather"* Refers to if you want to read the resulting data file into memory to clean and then serialize in your serialized subdirectory. Available options incldue 'feather', 'pickle', and False  False is if you do not want to serialize the resulting dataframe, but just get the text.
 
 partition_key (str): *default = ''* There is no partitioning by default. When you define a partition key, it MUST BE A DATE COLUMN AS DEFINED IN TERADATA. This breaks up the exporting into paritions by the *partition_type* argument. This generates multiple fexp scripts and executes them in parrelel using the available cores. This helps to break up extremely large datasets or increase speed. When a parition key is defined, after all of the partition files are finished loading from Teradata, the resulting data is COMBINED into a SINGLE DATA FILE and finishes processing through the following cleaning, data type specification, and serializing.
 
@@ -127,7 +127,7 @@ primary_keys (list(str)): *default = []* This is required any time that horizont
 
 *Returns*
 
-Column list received from the metadata if clean_and_pickle is set to False, else nothing. Column names are returned in this case so you can save them and use them to read the raw data file later with appropriate columns.
+Column list received from the metadata if clean_and_serialize is set to False, else nothing. Column names are returned in this case so you can save them and use them to read the raw data file later with appropriate columns.
 
 |
 |
@@ -165,6 +165,7 @@ Requirements
 - `joblib <https://github.com/joblib/joblib>`_
 - `pyodbc <https://github.com/mkleehammer/pyodbc>`_
 - `teradata <https://github.com/Teradata/PyTd>`_
+- `feather-format <https://github.com/wesm/feather>`_
 
 
 
