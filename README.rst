@@ -31,9 +31,15 @@ You then have the option to read the data into memory to clean it and then seria
 **Major Updates**
 
 *Update 11/10/2017*
+
 Basic fastloading capabilities have been added for doing a fastload from a pandas dataframe
 
+*Update 11/24/2017*
+
+Major update to data type robustness on export
+
 *Update 12/1/2017*
+
 Auto horizontal scaling merged
 Feather serialization merged
 
