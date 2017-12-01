@@ -49,7 +49,7 @@ Once you have your credential file set up, you are ready to go.
 
 **Extracting a table**
 
-An example of using the module is as follows:
+An example of exporting is as follows:
 
 .. code-block:: python
 
@@ -65,6 +65,25 @@ This particular call will
  * Execute the script and populate a data file with the first 50 rows of the table into the data/ subdirectory
  * Read in the data file and attempt to clean it with np.nans where appropriate as well as appropriate typecasting
  * Save the resulting pandas dataframe into the pickled/ subdirectory
+
+|
+|
+
+**Loading a table**
+
+An example of loading is as follows:
+
+.. code-block:: python
+
+   import fastteradata as ftd
+
+   ftd.load_table("/absolute/path/for/files", df,  "TABLE_NAME", "ENV_NAME", "DB_NAME", clear_table=True)
+
+This call will
+ * Take the datatypes from your dataframe and generate a fastload script file
+ * Save your dataframe to the appropriate csv file that fastload expects
+ * Since the clear_table flag is True (True by default as well) it will DROP THE CURRENT TABLE if one exists with that name in that databse, and recreate a new table to fill in
+ * Execute the script to populate the database table
 
 |
 |
@@ -104,6 +123,8 @@ partition_key (str): *default = ''* There is no partitioning by default. When yo
 
 partition_type (str): *default = 'year'* Default is to partition the partition_key by distict YEAR. Valid options include "year" or "month"
 
+primary_keys (list(str)): *default = []* This is required any time that horizontal partitioning is required. Horizontal partitioning is done automatically when there are more than 100 columns you are trying to extract from a table. The list of column names should be the columns that define a unique row in the dataset. If these do not define a unique row, you will recieve unexpected behavior of unwanted rows appearing in yoru dataset. This scaling feature is required because of the limitationso f Teradata's fastexport utility. It is to abstract back the headache of having to deal with more columns than the utility can handle.
+
 *Returns*
 
 Column list received from the metadata if clean_and_pickle is set to False, else nothing. Column names are returned in this case so you can save them and use them to read the raw data file later with appropriate columns.
@@ -119,7 +140,7 @@ Loads a pandas dataframe from memory into teradata via the optimized fastload fu
 
 *Args*
 
-abs_path (str): Absolute path where you want your scripts to reside and data and pickled subdirectories made (Most of the time should be same absolute path as the extract_table abs_path)
+abs_path (str): Absolute path where you want your scripts to reside and appropriate subdirectories made (Most of the time should be same absolute path as the extract_table abs_path)
 
 df (pandas DataFrame): The pandas DataFrame that you want to save up to teradata
 

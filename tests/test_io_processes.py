@@ -15,7 +15,7 @@ valid_rm_cmd_linux = "rm "
 valid_data_file_windows = "C:\\Users\\u374781\\Desktop\\FastTeradata\\dev_files\\TEMP\\data\\CNSLDTD_DRUG_OKLAHOMA_export.txt"
 valid_data_file_linux = "C:/Users/u374781/Desktop/FastTeradata/dev_files/TEMP/data/CNSLDTD_DRUG_OKLAHOMA_export.txt"
 
-data_file, concat_str, data_files, remove_cmd = combine_partitioned_file(script_files)
+concat_str, data_files, remove_cmd = combine_partitioned_file(script_files, combine_type="vertical")
 
 
 
@@ -32,10 +32,3 @@ def test_combine_partitioned_files_valid_remove():
         assert valid_rm_cmd_windows == remove_cmd
     else:
         assert valid_rm_cmd_linux == remove_cmd
-
-def test_combine_partitioned_files_valid_data_file():
-    import os
-    if os.name == "nt":
-        assert valid_data_file_windows == data_file
-    else:
-        assert valid_data_file_linux == data_file

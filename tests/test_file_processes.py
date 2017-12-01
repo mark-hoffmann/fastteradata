@@ -69,14 +69,14 @@ def test_generate_sql_main_output_file_partition_key_default():
                                             current_partition="2016", )
     assert valid_final_partition_default, final
 
-valid_final_partition_default = ".LOGTABLE database1.fexplog; \n\n.LOGON /username, password; \n\n.BEGIN EXPORT; \n\n .EXPORT OUTFILE /data/ \n MODE RECORD FORMAT TEXT;\n\nSELECT TOP 10 CAST(\nCOALESCE(CAST(CAST(col1 AS DATE FORMAT 'YYYY-MM-DD') AS CHAR(10)),'?')||'|'||\nCOALESCE(CAST(col2 AS CHAR(8)),'?')\n AS CHAR(20))\nFROM database1.table1\nWHERE EXTRACT(YEAR  FROM col1) = 2016; \n.END EXPORT;\n\n .LOGOFF;"
+valid_final_partition_default = ".LOGTABLE database1.fexplog; \n\n.LOGON /username, password; \n\n.BEGIN EXPORT; \n\n .EXPORT OUTFILE /data/ \n MODE RECORD FORMAT TEXT;\n\nSELECT TOP 10 CAST(\nCOALESCE(CAST(CAST(col1 AS DATE FORMAT 'YYYY-MM-DD') AS CHAR(10)),'?')||'|'||\nCOALESCE(CAST(col2 AS CHAR(8)),'?')\n AS CHAR(20))\nFROM database1.table1\nWHERE EXTRACT(YEAR  FROM col1) = 2016;\n.END EXPORT;\n\n .LOGOFF;"
 def test_generate_sql_main_output_file_partition_key_default_explicit():
     final, col_list = generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, meta_df_dates,
                                             columns=columns, nrows=nrows, partition_key="col1",
                                             current_partition="2016", partition_type="year")
     assert valid_final_partition_default == final
 
-valid_final_partition_month = ".LOGTABLE database1.fexplog; \n\n.LOGON /username, password; \n\n.BEGIN EXPORT; \n\n .EXPORT OUTFILE /data/ \n MODE RECORD FORMAT TEXT;\n\nSELECT TOP 10 CAST(\nCOALESCE(CAST(CAST(col1 AS DATE FORMAT 'YYYY-MM-DD') AS CHAR(10)),'?')||'|'||\nCOALESCE(CAST(col2 AS CHAR(8)),'?')\n AS CHAR(20))\nFROM database1.table1\nWHERE EXTRACT(YEAR  FROM col1) = 2016 AND EXTRACT(MONTH FROM col1) = 11; \n.END EXPORT;\n\n .LOGOFF;"
+valid_final_partition_month = ".LOGTABLE database1.fexplog; \n\n.LOGON /username, password; \n\n.BEGIN EXPORT; \n\n .EXPORT OUTFILE /data/ \n MODE RECORD FORMAT TEXT;\n\nSELECT TOP 10 CAST(\nCOALESCE(CAST(CAST(col1 AS DATE FORMAT 'YYYY-MM-DD') AS CHAR(10)),'?')||'|'||\nCOALESCE(CAST(col2 AS CHAR(8)),'?')\n AS CHAR(20))\nFROM database1.table1\nWHERE EXTRACT(YEAR  FROM col1) = 2016 AND EXTRACT(MONTH FROM col1) = 11;\n.END EXPORT;\n\n .LOGOFF;"
 def test_generate_sql_main_output_file_partition_key_month():
     final, col_list = generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, meta_df_dates,
                                             columns=columns, nrows=nrows, partition_key="col1",
