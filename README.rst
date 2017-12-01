@@ -28,8 +28,14 @@ The main task this package accomplishes right now is export large tables faster 
 This is accomplished by connecting to a Teradata account and reading metadata about the table of interest to autogenerate and execute the appropriate fastexport script.
 You then have the option to read the data into memory to clean it and then serialize it as a feather or pickle file with correct data types and columns.
 
+**Major Updates**
+
 *Update 11/10/2017*
 Basic fastloading capabilities have been added for doing a fastload from a pandas dataframe
+
+*Update 12/1/2017*
+Auto horizontal scaling merged
+Feather serialization merged
 
 
 Additional components will continue to be worked on such as
