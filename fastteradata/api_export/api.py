@@ -11,7 +11,7 @@ from ..file_processors.io_processors import *
 from ..metadata_processors.metadata_processors import *
 
 
-def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata", columns = [], clean_and_pickle=True, partition_key="", partition_type="year", primary_keys=[]):
+def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata", columns = [], clean_and_serialize="feather", partition_key="", partition_type="year", primary_keys=[]):
     """
         Summary:
             Extracts table information from Teradata and saves / executes the appropriate files
@@ -40,8 +40,8 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
     try:
         if not os.path.isdir(f"{abs_path}/data"):
             os.makedirs(f"{abs_path}/data")
-        if not os.path.isdir(f"{abs_path}/pickled"):
-            os.makedirs(f"{abs_path}/pickled")
+        if not os.path.isdir(f"{abs_path}/serialized"):
+            os.makedirs(f"{abs_path}/serialized")
     except:
         raise Exception("Oops something went wrong when trying to make your storage directories. \
                             Make sub directories in your absolute path folder of 'data' and 'pickled'")
@@ -69,9 +69,9 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
 
 
         data_file = f"{abs_path}/data/{table_name}_export.txt"
-        print("before did partition check")
-        print(did_partition)
-        print(fexp_scripts)
+        #print("before did partition check")
+        #print(did_partition)
+        #print(fexp_scripts)
         #print(col_list)
         if did_partition:
             #First checking the case of vertical parrelelization
@@ -80,15 +80,15 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
                 combine_type = "vertical"
             else:
                 combine_type = "horizontal"
-            print(combine_type)
+            #print(combine_type)
             concat_str, data_files, remove_cmd = combine_partitioned_file(fexp_scripts,combine_type=combine_type)
 
 
             #Concat and delete partition files
             #If we are doing a vertical concat, we use this
-            print("Concat str: " + str(concat_str))
+            #print("Concat str: " + str(concat_str))
             if concat_str:
-                print("In here")
+                #print("In here")
                 concat_files(concat_str)
             else:
                 #If we are doing a horizontal concat we will read into memory and combine
@@ -103,8 +103,9 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
 
 
         #raw_tbl_name = data_file.split("/")[-1].split(".")[0]
-
-        if clean_and_pickle:
+        if clean_and_serialize != False:
+            if clean_and_serialize not in ["feather","pickle"]:
+                raise Exception("Serialize must be either 'feather' or 'pickle'")
             print("Reading Table into memory...")
             #Need low_memory flag or else with large datasets we will end up with mixed datatypes
             if concat_str or did_partition == False:
@@ -122,6 +123,7 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
             for col in _df.columns.tolist():
                 if _df[col].dtype == "object":
                     #_df[col] = _df[col].apply(lambda x: x.str.strip())
+                    _df[col] = _df[col].apply(lambda x: np.nan if pd.isnull(x) else x.strip())
                     _df[col] = _df[col].apply(lambda x: np.nan if pd.isnull(x) else np.nan if ('missing' in x.lower()) else x)
             _df.replace("~",np.nan,inplace=True)
             _df.replace("!",np.nan,inplace=True)
@@ -146,10 +148,15 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
                     except:
                         pass
             print("Pickling data....")
+            if clean_and_serialize == "feather":
+                _df.to_feather(f"{abs_path}/serialized/{table_name}.feather")
+                print("Finished: Your data file is located at:")
+                print(f"{abs_path}/serialized/{table_name}.feather")
+            elif clean_and_serialize == "pickle":
+                _df.to_pickle(f"{abs_path}/serialized/{table_name}.pkl")
+                print("Finished: Your data file is located at:")
+                print(f"{abs_path}/serialized/{table_name}.pkl")
 
-            _df.to_pickle(f"{abs_path}/pickled/{table_name}.pkl")
-            print("Finished: Your pickle file is located at:")
-            print(f"{abs_path}/pickled/{table_name}.pkl")
             t2 = time.time()
             m, s = divmod(int(t2-t1), 60)
             h, m = divmod(m, 60)
@@ -159,7 +166,7 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
         else:
             print("Finished: Your end data file is located at:")
             print(data_file)
-            print("You have chosen to not clean or pickle your data and fast export does not support export column names. \
+            print("You have chosen to not clean or serialize your data and fast export does not support export column names. \
                     Be sure to gather and keep in order these column names.")
 
 
