@@ -69,6 +69,10 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
 
 
         data_file = f"{abs_path}/data/{table_name}_export.txt"
+        print("before did partition check")
+        print(did_partition)
+        print(fexp_scripts)
+        #print(col_list)
         if did_partition:
             #First checking the case of vertical parrelelization
 
@@ -76,12 +80,15 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
                 combine_type = "vertical"
             else:
                 combine_type = "horizontal"
+            print(combine_type)
             concat_str, data_files, remove_cmd = combine_partitioned_file(fexp_scripts,combine_type=combine_type)
 
 
             #Concat and delete partition files
             #If we are doing a vertical concat, we use this
+            print("Concat str: " + str(concat_str))
             if concat_str:
+                print("In here")
                 concat_files(concat_str)
             else:
                 #If we are doing a horizontal concat we will read into memory and combine
@@ -100,15 +107,21 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
         if clean_and_pickle:
             print("Reading Table into memory...")
             #Need low_memory flag or else with large datasets we will end up with mixed datatypes
-            if concat_str:
+            if concat_str or did_partition == False:
                 #If we have a concat_str, that means we need to read _df into memory for the first time
                 #If it's false, that means that we already have it in memory from doing a horizontal combining
-                _df = pd.read_csv(data_file, names=col_list, sep="|", low_memory=False)
+                _df = pd.DataFrame()
+                try:
+                    _df = pd.read_csv(data_file, names=col_list, sep="|", low_memory=False)
+                except Exception as e:
+                    pass
+                if len(_df) == 0:
+                    _df = pd.read_csv(data_file, names=col_list, sep="|", low_memory=False, encoding='latin1')
 
             print("Cleaning data...")
             for col in _df.columns.tolist():
                 if _df[col].dtype == "object":
-                    _df[col] = _df[col].str.strip()
+                    #_df[col] = _df[col].apply(lambda x: x.str.strip())
                     _df[col] = _df[col].apply(lambda x: np.nan if pd.isnull(x) else np.nan if ('missing' in x.lower()) else x)
             _df.replace("~",np.nan,inplace=True)
             _df.replace("!",np.nan,inplace=True)
@@ -125,10 +138,10 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
                         pass
                 if (("_id" in col) or ("_key" in col) or ("_cd" in col)):
                     try:
-                        print("before force string")
+                        #print("before force string")
                         check_nulls(_df["EPI_ID"])
                         force_string(_df,col)
-                        print("after force string")
+                        #print("after force string")
                         check_nulls(_df["EPI_ID"])
                     except:
                         pass
@@ -156,6 +169,9 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
         print(f"Process took: {h} hours {m} minutes {s} seconds")
     except Exception as e:
         print(f"Error: {e}")
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(exc_type, fname, exc_tb.tb_lineno)
         return
 
     return(col_list)

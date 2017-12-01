@@ -60,7 +60,7 @@ def get_unique_partitions(env,db,table,auth_dict=auth_dict,custom_auth=False,con
 
 
 def generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, meta_df, columns=[], nrows=-1,
-                      partition_key="", current_partition="", partition_type=""):
+                      partition_key="", current_partition="", partition_type="", orderby=[]):
     #print("in generage_sql_main")
     #print(partition_key)
 
@@ -119,17 +119,26 @@ def generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, 
 
     from_string = "FROM " + db + "." + table + "\n"
 
-    where_string = ";\n"
+    where_string = ""
     if partition_key != "" and current_partition != "":
         if partition_type == "year":
-            where_string = "WHERE EXTRACT(YEAR  FROM " + partition_key + ") = " + str(current_partition) + "; \n"
+            where_string = "WHERE EXTRACT(YEAR  FROM " + partition_key + ") = " + str(current_partition)
         elif partition_type == "month":
             where_string = "WHERE EXTRACT(YEAR  FROM " + partition_key + ") = " + str(current_partition.split("D")[0]) + \
-            " AND " + "EXTRACT(MONTH FROM " + partition_key + ") = " + str(current_partition.split("D")[1]) + "; \n"
+            " AND " + "EXTRACT(MONTH FROM " + partition_key + ") = " + str(current_partition.split("D")[1])
 
-    end_string = ".END EXPORT;\n\n .LOGOFF;"
+    orderby_string = ""
+    if len(orderby) > 0:
+        #If we have order by columns add those to script (useful for horizontal partition pulls)
+        orderby_string = " ORDER BY "
+        for i, c in enumerate(orderby):
+            orderby_string += f"{c} "
+            if (i + 1) != len(orderby):
+                orderby_string += ", "
 
-    final = setup_string + export_string + select_string + from_string + where_string + end_string
+    end_string = ";\n.END EXPORT;\n\n .LOGOFF;"
+
+    final = setup_string + export_string + select_string + from_string + where_string + orderby_string + end_string
 
 
     return(final, col_list)
@@ -186,9 +195,8 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
 
     #Making changes here to accomodate horizontal scaling. To start off, we will just check that if we need to do horizontal scaling, you will not be able to use a partition Key
     did_partition = False  #Partition flag to pass through for appropriate processing
-    MAX_COLS = 5
+    MAX_COLS = 100
     tot_columns = len(meta_df["ColumnName"].apply(lambda x: x.lower().strip()).unique())
-
 
     unique_partitions = []
     if partition_key != "" and tot_columns <= MAX_COLS:
@@ -197,9 +205,6 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
         did_partition = True
     elif partition_key != "" and tot_columns > MAX_COLS:
         print("Cannot create vertical partition because horizontal partitioning is required. Creating horizontal partitions instead.")
-
-
-
 
 
     final = ""
@@ -238,12 +243,12 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
             cols = col_lookup(meta_df, i, tot_columns, MAX_COLS) + primary_keys  #use the columns in our iteration and add on the specified primary keys so that we can recombine later
             cols = list(set(cols)) #reduce the columns to unique if one of our primary keys is repeated
             _fname = file_name + "_" + str(i) + "_export.txt"
-            final, this_col_list = generate_sql_main(export_path, _fname, env_short, usr, passw, db, table, meta_df, columns=cols, nrows=nrows)
+            final, this_col_list = generate_sql_main(export_path, _fname, env_short, usr, passw, db, table, meta_df, columns=cols, nrows=nrows, orderby=primary_keys)
             col_list.append(this_col_list) #Since this case will have multiple col_lists, we create a list of lists to pass through
             #Save fast export file
             script_path = save_file(export_path, _fname, final)
             fast_export_scripts.append(script_path)
-            did_partition = True
+        did_partition = True
 
     #Check for testing missed columns from metadata
     #Testing purposes, can eventually get rid of
@@ -256,7 +261,6 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
             print("Missing columns needed adding: ")
             print(cols_not_found)
     """
-
     return col_list, fast_export_scripts, did_partition
 
 def force_string(df, series):
