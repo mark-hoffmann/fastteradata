@@ -137,6 +137,10 @@ partition_type (str): *default = 'year'* Default is to partition the partition_k
 
 primary_keys (list(str)): *default = []* This is required any time that horizontal partitioning is required. Horizontal partitioning is done automatically when there are more than 100 columns you are trying to extract from a table. The list of column names should be the columns that define a unique row in the dataset. If these do not define a unique row, you will recieve unexpected behavior of unwanted rows appearing in yoru dataset. This scaling feature is required because of the limitationso f Teradata's fastexport utility. It is to abstract back the headache of having to deal with more columns than the utility can handle.
 
+meta_table (str): *default = ""* This is used if you want to override what table to take metadata from. For example, views do not have metadata associated with them in Teradata, therefore one can create a temp table without data from a view to get the metadata registered in dbc.tables and dbc.columns. We can then point to the temp table's metadata while pulling from the correct view. Follows format "dbname.tablename"
+
+where_clause (str): *default = ""* Where clause to use in sql generated scripts. Do not need to add WHERE  ex. "col1 > 15"
+
 *Returns*
 
 Column list received from the metadata if clean_and_serialize is set to False, else nothing. Column names are returned in this case so you can save them and use them to read the raw data file later with appropriate columns.

@@ -30,7 +30,9 @@ def _process_metadata_fexp(df,partition_key=""):
             length = df.loc[i,"ColumnLength"] + 1
             col_type = df.loc[i,"ColumnType"]
             char_type = df.loc[i,"CharType"]
-            if col_type != "DA" and char_type >= 1:
+            if col_type == "TS":
+                data_types.append("VARCHAR(30)")
+            elif col_type != "DA" and char_type >= 1:
                 length = int(length)
                 data_types.append(f"CHAR({length})")
             elif col_type != "DA" and char_type == 0:
@@ -74,7 +76,7 @@ def _process_metadata_fexp(df,partition_key=""):
     #print(df)
     return(df)
 
-def get_table_metadata(env, db_name, tbl_name,columns = [], auth_dict=auth_dict, custom_auth=False, connector="teradata",partition_key=""):
+def get_table_metadata(env, db_name, tbl_name,columns = [], auth_dict=auth_dict, custom_auth=False, connector="teradata",partition_key="", meta_table=""):
     """
         Summary:
             Get's the metadata about a specific table for creation of the fast scripts.
@@ -103,6 +105,9 @@ def get_table_metadata(env, db_name, tbl_name,columns = [], auth_dict=auth_dict,
         passw = auth_dict[1]
     """
     env_n, env_dsn, env_short, usr, passw = load_db_info(env)
+
+    if len(meta_table) > 0:
+        db_name, tbl_name = meta_table.split(".")
 
     if len(columns) == 0:
 

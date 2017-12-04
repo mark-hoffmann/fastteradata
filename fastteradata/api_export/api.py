@@ -11,7 +11,7 @@ from ..file_processors.io_processors import *
 from ..metadata_processors.metadata_processors import *
 
 
-def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata", columns = [], clean_and_serialize="feather", partition_key="", partition_type="year", primary_keys=[]):
+def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata", columns = [], clean_and_serialize="feather", partition_key="", partition_type="year", primary_keys=[], meta_table="", where_clause=""):
     """
         Summary:
             Extracts table information from Teradata and saves / executes the appropriate files
@@ -51,7 +51,7 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
         print(f"Starting process for: {db}.{table_name}")
         script_name = table_name
         print("Grabbing meta data and generating fast export file...")
-        col_list, fexp_scripts, did_partition = parse_sql_single_table(abs_path, env,db,table_name, nrows=nrows, connector=connector, columns = columns, partition_key=partition_key, partition_type=partition_type, primary_keys=primary_keys)
+        col_list, fexp_scripts, did_partition = parse_sql_single_table(abs_path, env,db,table_name, nrows=nrows, connector=connector, columns = columns, partition_key=partition_key, partition_type=partition_type, primary_keys=primary_keys, meta_table=meta_table, where_clause=where_clause)
 
         #FOR MULTIPROCESSING WHEN PUT INTO A PACKAGE
         from .multiprocess import call_sub
@@ -123,7 +123,10 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
             for col in _df.columns.tolist():
                 if _df[col].dtype == "object":
                     #_df[col] = _df[col].apply(lambda x: x.str.strip())
-                    _df[col] = _df[col].apply(lambda x: np.nan if pd.isnull(x) else x.strip())
+                    try:
+                        _df[col] = _df[col].apply(lambda x: np.nan if pd.isnull(x) else x.strip())
+                    except:
+                        pass
                     _df[col] = _df[col].apply(lambda x: np.nan if pd.isnull(x) else np.nan if ('missing' in x.lower()) else x)
             _df.replace("~",np.nan,inplace=True)
             _df.replace("!",np.nan,inplace=True)
@@ -147,7 +150,7 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
                         check_nulls(_df["EPI_ID"])
                     except:
                         pass
-            print("Pickling data....")
+            print("Serializing data....")
             if clean_and_serialize == "feather":
                 _df.to_feather(f"{abs_path}/serialized/{table_name}.feather")
                 print("Finished: Your data file is located at:")

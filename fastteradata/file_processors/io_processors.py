@@ -119,6 +119,7 @@ def concat_files_horizontal(data_file, data_files, col_list, primary_keys):
             _df = df
         else:
             _df = pd.merge(_df,df, how="inner", right_on=primary_keys,left_on=primary_keys)
+        #print("Size of _df: " + str(len(_df)) + " " + str(len(_df.columns)) )
 
     #save dataframe from memory into a text file in the appropriate place
     print("Saving Horizontal concatenation file out")

@@ -60,12 +60,15 @@ def get_unique_partitions(env,db,table,auth_dict=auth_dict,custom_auth=False,con
 
 
 def generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, meta_df, columns=[], nrows=-1,
-                      partition_key="", current_partition="", partition_type="", orderby=[]):
+                      partition_key="", current_partition="", partition_type="", orderby=[], meta_table="", where_clause=""):
     #print("in generage_sql_main")
     #print(partition_key)
+    log_table = db
+    if len(meta_table) > 0:
+        log_table, _ = meta_table.split(".")
 
     #Step 1
-    setup_string = f".LOGTABLE {db}.fexplog; \n\n" + f".LOGON {env_short}/{usr}, {passw}; \n\n"
+    setup_string = f".LOGTABLE {log_table}.fexplog; \n\n" + f".LOGON {env_short}/{usr}, {passw}; \n\n"
     #Step 2
     export_string = ".BEGIN EXPORT; \n\n .EXPORT OUTFILE " + export_path + "/data/" + file_name + " \n MODE RECORD FORMAT TEXT;\n\n"
 
@@ -126,6 +129,11 @@ def generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, 
         elif partition_type == "month":
             where_string = "WHERE EXTRACT(YEAR  FROM " + partition_key + ") = " + str(current_partition.split("D")[0]) + \
             " AND " + "EXTRACT(MONTH FROM " + partition_key + ") = " + str(current_partition.split("D")[1])
+        if len(where_clause) > 0:
+            where_string += f" AND {where_clause}"
+    else:
+        if len(where_clause) > 0:
+            where_string = f"WHERE {where_clause}"
 
     orderby_string = ""
     if len(orderby) > 0:
@@ -162,7 +170,7 @@ def coalesce_statement(var, dtype, end=False):
 
 def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=auth_dict,
                            custom_auth=False, nrows=-1,connector="teradata",
-                           partition_key="", partition_type="year", execute=True, primary_keys=[]):
+                           partition_key="", partition_type="year", execute=True, primary_keys=[], meta_table="", where_clause=""):
     """
         Summary:
             Parses the information for a valid database table and writes script to output file
@@ -188,14 +196,14 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
     env_n, env_dsn, env_short, usr, passw = load_db_info(env, custom_auth=custom_auth)
     #Get metadata
     #print("metadata")
-    meta_df = get_table_metadata(env,db,table, columns = columns, auth_dict=auth_dict, custom_auth=custom_auth, connector=connector, partition_key=partition_key)
+    meta_df = get_table_metadata(env,db,table, columns = columns, auth_dict=auth_dict, custom_auth=custom_auth, connector=connector, partition_key=partition_key, meta_table=meta_table)
 
     #If we have a partition key, we need to find the unique years for the date key
     #print("unique_partitions")
 
     #Making changes here to accomodate horizontal scaling. To start off, we will just check that if we need to do horizontal scaling, you will not be able to use a partition Key
     did_partition = False  #Partition flag to pass through for appropriate processing
-    MAX_COLS = 100
+    MAX_COLS = 90
     tot_columns = len(meta_df["ColumnName"].apply(lambda x: x.lower().strip()).unique())
 
     unique_partitions = []
@@ -213,7 +221,7 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
     file_name = table
     if did_partition == False and partition_key == "" and tot_columns <= MAX_COLS:
         _fname = file_name + "_export.txt"
-        final, col_list = generate_sql_main(export_path, _fname, env_short, usr, passw, db, table, meta_df, columns=columns, nrows=nrows)
+        final, col_list = generate_sql_main(export_path, _fname, env_short, usr, passw, db, table, meta_df, columns=columns, nrows=nrows, meta_table=meta_table, where_clause=where_clause)
         #Save fast export file
         script_path = save_file(export_path, _fname, final)
         fast_export_scripts.append(script_path)
@@ -221,7 +229,7 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
         #process the normal vertical partitioning
         for part in unique_partitions:
             _fname = file_name + "_" + str(part) + "_export.txt"
-            final, col_list = generate_sql_main(export_path, _fname, env_short, usr, passw, db, table, meta_df, columns=columns, nrows=nrows, partition_key=partition_key, current_partition=part, partition_type=partition_type)
+            final, col_list = generate_sql_main(export_path, _fname, env_short, usr, passw, db, table, meta_df, columns=columns, nrows=nrows, partition_key=partition_key, current_partition=part, partition_type=partition_type, meta_table=meta_table, where_clause=where_clause)
             #Save fast export file
             script_path = save_file(export_path, _fname, final)
             fast_export_scripts.append(script_path)
@@ -243,7 +251,7 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
             cols = col_lookup(meta_df, i, tot_columns, MAX_COLS) + primary_keys  #use the columns in our iteration and add on the specified primary keys so that we can recombine later
             cols = list(set(cols)) #reduce the columns to unique if one of our primary keys is repeated
             _fname = file_name + "_" + str(i) + "_export.txt"
-            final, this_col_list = generate_sql_main(export_path, _fname, env_short, usr, passw, db, table, meta_df, columns=cols, nrows=nrows, orderby=primary_keys)
+            final, this_col_list = generate_sql_main(export_path, _fname, env_short, usr, passw, db, table, meta_df, columns=cols, nrows=nrows, orderby=primary_keys, meta_table=meta_table, where_clause=where_clause)
             col_list.append(this_col_list) #Since this case will have multiple col_lists, we create a list of lists to pass through
             #Save fast export file
             script_path = save_file(export_path, _fname, final)
