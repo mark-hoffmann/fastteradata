@@ -161,9 +161,9 @@ def coalesce_statement(var, dtype, end=False):
         end_s = "||'|'||\n"
 
     if (dtype != "DATE FORMAT 'YYYY-MM-DD') AS CHAR(10)") and ("DECIMAL" not in dtype):
-        coal_s = "COALESCE(CAST(" + var + " AS " + dtype + "),'?')" + end_s
+        coal_s = "COALESCE(CAST(" + var + " AS " + dtype + "),'')" + end_s
     else:
-        coal_s = "COALESCE(CAST(CAST(" + var + " AS " + dtype + "),'?')" + end_s
+        coal_s = "COALESCE(CAST(CAST(" + var + " AS " + dtype + "),'')" + end_s
 
     return(coal_s)
 
@@ -196,7 +196,7 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
     env_n, env_dsn, env_short, usr, passw = load_db_info(env, custom_auth=custom_auth)
     #Get metadata
     #print("metadata")
-    meta_df = get_table_metadata(env,db,table, columns = columns, auth_dict=auth_dict, custom_auth=custom_auth, connector=connector, partition_key=partition_key, meta_table=meta_table)
+    meta_df, dtype_dict = get_table_metadata(env,db,table, columns = columns, auth_dict=auth_dict, custom_auth=custom_auth, connector=connector, partition_key=partition_key, meta_table=meta_table)
 
     #If we have a partition key, we need to find the unique years for the date key
     #print("unique_partitions")
@@ -258,6 +258,12 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
             fast_export_scripts.append(script_path)
         did_partition = True
 
+    #Save dtype_dict and cols so we can reference if need be
+    import pickle
+    with open(f"{export_path}/data/{table}_dict_types.pkl", 'wb') as handle:
+        pickle.dump(dtype_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    with open(f"{export_path}/data/{table}_columns.pkl", 'wb') as handle:
+        pickle.dump(col_list, handle, protocol=pickle.HIGHEST_PROTOCOL)
     #Check for testing missed columns from metadata
     #Testing purposes, can eventually get rid of
     """
@@ -269,7 +275,7 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
             print("Missing columns needed adding: ")
             print(cols_not_found)
     """
-    return col_list, fast_export_scripts, did_partition
+    return col_list, fast_export_scripts, did_partition, dtype_dict
 
 def force_string(df, series):
     try:

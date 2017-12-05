@@ -51,7 +51,7 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
         print(f"Starting process for: {db}.{table_name}")
         script_name = table_name
         print("Grabbing meta data and generating fast export file...")
-        col_list, fexp_scripts, did_partition = parse_sql_single_table(abs_path, env,db,table_name, nrows=nrows, connector=connector, columns = columns, partition_key=partition_key, partition_type=partition_type, primary_keys=primary_keys, meta_table=meta_table, where_clause=where_clause)
+        col_list, fexp_scripts, did_partition, dtype_dict = parse_sql_single_table(abs_path, env,db,table_name, nrows=nrows, connector=connector, columns = columns, partition_key=partition_key, partition_type=partition_type, primary_keys=primary_keys, meta_table=meta_table, where_clause=where_clause)
 
         #FOR MULTIPROCESSING WHEN PUT INTO A PACKAGE
         from .multiprocess import call_sub
@@ -113,11 +113,11 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
                 #If it's false, that means that we already have it in memory from doing a horizontal combining
                 _df = pd.DataFrame()
                 try:
-                    _df = pd.read_csv(data_file, names=col_list, sep="|", low_memory=False)
+                    _df = pd.read_csv(data_file, names=col_list, sep="|", dtype=dtype_dict)
                 except Exception as e:
                     pass
                 if len(_df) == 0:
-                    _df = pd.read_csv(data_file, names=col_list, sep="|", low_memory=False, encoding='latin1')
+                    _df = pd.read_csv(data_file, names=col_list, sep="|", dtype=dtype_dict, encoding='latin1')
 
             print("Cleaning data...")
             for col in _df.columns.tolist():
@@ -144,10 +144,8 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
                 if (("_id" in col) or ("_key" in col) or ("_cd" in col)):
                     try:
                         #print("before force string")
-                        check_nulls(_df["EPI_ID"])
                         force_string(_df,col)
                         #print("after force string")
-                        check_nulls(_df["EPI_ID"])
                     except:
                         pass
             print("Serializing data....")
