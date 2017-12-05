@@ -22,6 +22,7 @@ auth, auth_dict, env_dict = read_credential_file()
 def _process_metadata_fexp(df,partition_key=""):
     data_types = [] #let's calculate then put types in a list to easily add on to the df
     #print(df.columns.tolist())
+    dtype_dict = {}
     unique_cols = set()
     #print("before dropping length: " + str(len(df)))
     for i in range(0,len(df)):
@@ -32,9 +33,11 @@ def _process_metadata_fexp(df,partition_key=""):
             char_type = df.loc[i,"CharType"]
             if col_type == "TS":
                 data_types.append("VARCHAR(30)")
+                dtype_dict[df.loc[i,"ColumnName"]] = "str"
             elif col_type != "DA" and char_type >= 1:
                 length = int(length)
                 data_types.append(f"CHAR({length})")
+                dtype_dict[df.loc[i,"ColumnName"]] = "str"
             elif col_type != "DA" and char_type == 0:
                 #print(df.loc[i,"DecimalTotalDigits"])
                 #print(int(df.loc[i,"DecimalTotalDigits"]))
@@ -56,10 +59,12 @@ def _process_metadata_fexp(df,partition_key=""):
                 if len(dec_form) > 0:
                     dec_form = "." + dec_form
                 data_types.append(f"DECIMAL({dec_digits},{dec_fractional}) FORMAT 'Z{form}{dec_form}') AS CHAR({chars})")
+                dtype_dict[df.loc[i,"ColumnName"]] = "str"
             else:
                 #nums = df.loc[i,"ColumnFormat"].replace("-","").replace("(","").strip().split(")")
                 #MAKE SURE TO HANDLE DATE CASE WHEN APPENDING STRINGS for parentheses
                 data_types.append("DATE FORMAT 'YYYY-MM-DD') AS CHAR(10)")
+                dtype_dict[df.loc[i,"ColumnName"]] = "date"
 
             #Check for correct data type of parition key of Date
             if df.loc[i,"ColumnName"] == partition_key:
@@ -74,7 +79,7 @@ def _process_metadata_fexp(df,partition_key=""):
     df["FormattedColumnType"] = data_types
     #df.drop(["ColumnFormat","ColumnLength","CharType"], axis=1, inplace=True)
     #print(df)
-    return(df)
+    return(df, dtype_dict)
 
 def get_table_metadata(env, db_name, tbl_name,columns = [], auth_dict=auth_dict, custom_auth=False, connector="teradata",partition_key="", meta_table=""):
     """
@@ -136,9 +141,9 @@ def get_table_metadata(env, db_name, tbl_name,columns = [], auth_dict=auth_dict,
         conn = odbc.connect('DRIVER={Teradata};VERSION=14.10;'+f"DBCNAME={env_n};DSN={env_dsn};UID={usr};PWD={passw};QUIETMODE=YES",autocommit=True)
 
         df = pd.read_sql(sql,conn)
-        df = _process_metadata_fexp(df,partition_key=partition_key)
+        df, dtype_dict = _process_metadata_fexp(df,partition_key=partition_key)
         df['ColumnName'].str.lower()
-        return(df)
+        return(df, dtype_dict)
 
     elif connector == "teradata":
         udaExec = teradata.UdaExec(appName="Anomaly Detection", version='1.0', odbcLibPath="/opt/teradata/client/15.10/odbc_64/lib/libodbc.so", logConsole=False)
@@ -147,9 +152,9 @@ def get_table_metadata(env, db_name, tbl_name,columns = [], auth_dict=auth_dict,
         print("Connected!")
 
         df = pd.read_sql(sql, session)
-        df = _process_metadata_fexp(df,partition_key=partition_key)
+        df, dtype_dict = _process_metadata_fexp(df,partition_key=partition_key)
         df['ColumnName'].str.lower()
-        return(df)
+        return(df, dtype_dict)
     else:
         raise Exception("Wrong value error: Need to specify connector as either teradata or pyodbc")
 

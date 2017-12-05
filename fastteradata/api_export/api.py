@@ -51,7 +51,7 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
         print(f"Starting process for: {db}.{table_name}")
         script_name = table_name
         print("Grabbing meta data and generating fast export file...")
-        col_list, fexp_scripts, did_partition = parse_sql_single_table(abs_path, env,db,table_name, nrows=nrows, connector=connector, columns = columns, partition_key=partition_key, partition_type=partition_type, primary_keys=primary_keys, meta_table=meta_table, where_clause=where_clause)
+        col_list, fexp_scripts, did_partition, dtype_dict = parse_sql_single_table(abs_path, env,db,table_name, nrows=nrows, connector=connector, columns = columns, partition_key=partition_key, partition_type=partition_type, primary_keys=primary_keys, meta_table=meta_table, where_clause=where_clause)
 
         #FOR MULTIPROCESSING WHEN PUT INTO A PACKAGE
         from .multiprocess import call_sub
@@ -59,6 +59,12 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
         print("finished")
         #Can only execute in parrelel from command line in windows, won't execute from jupyter notebooks on a windows machine
         #So we only parrelelize if we see we are on linux
+        import subprocess
+        for f in fexp_scripts:
+            print(f"Calling Fast Export on file...  {f}")
+            subprocess.call(f"fexp < {f}", shell=True)
+        #Parrelel execution needs to be further worked out. Not behaving as expected so we will come back to it later
+        """
         if os.name == "nt":
             import subprocess
             for f in fexp_scripts:
@@ -66,7 +72,7 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
                 subprocess.call(f"fexp < {f}", shell=True)
         else:
             r = Parallel(n_jobs=-1, verbose=5)(delayed(call_sub)(f) for f in fexp_scripts)
-
+        """
 
         data_file = f"{abs_path}/data/{table_name}_export.txt"
         #print("before did partition check")
@@ -113,11 +119,11 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
                 #If it's false, that means that we already have it in memory from doing a horizontal combining
                 _df = pd.DataFrame()
                 try:
-                    _df = pd.read_csv(data_file, names=col_list, sep="|", low_memory=False)
+                    _df = pd.read_csv(data_file, names=col_list, sep="|", dtype=dtype_dict)
                 except Exception as e:
                     pass
                 if len(_df) == 0:
-                    _df = pd.read_csv(data_file, names=col_list, sep="|", low_memory=False, encoding='latin1')
+                    _df = pd.read_csv(data_file, names=col_list, sep="|", dtype=dtype_dict, encoding='latin1')
 
             print("Cleaning data...")
             for col in _df.columns.tolist():
@@ -144,10 +150,8 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
                 if (("_id" in col) or ("_key" in col) or ("_cd" in col)):
                     try:
                         #print("before force string")
-                        check_nulls(_df["EPI_ID"])
                         force_string(_df,col)
                         #print("after force string")
-                        check_nulls(_df["EPI_ID"])
                     except:
                         pass
             print("Serializing data....")
