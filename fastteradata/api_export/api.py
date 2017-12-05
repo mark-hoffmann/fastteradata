@@ -59,6 +59,12 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
         print("finished")
         #Can only execute in parrelel from command line in windows, won't execute from jupyter notebooks on a windows machine
         #So we only parrelelize if we see we are on linux
+        import subprocess
+        for f in fexp_scripts:
+            print(f"Calling Fast Export on file...  {f}")
+            subprocess.call(f"fexp < {f}", shell=True)
+        #Parrelel execution needs to be further worked out. Not behaving as expected so we will come back to it later
+        """
         if os.name == "nt":
             import subprocess
             for f in fexp_scripts:
@@ -66,7 +72,7 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
                 subprocess.call(f"fexp < {f}", shell=True)
         else:
             r = Parallel(n_jobs=-1, verbose=5)(delayed(call_sub)(f) for f in fexp_scripts)
-
+        """
 
         data_file = f"{abs_path}/data/{table_name}_export.txt"
         #print("before did partition check")
