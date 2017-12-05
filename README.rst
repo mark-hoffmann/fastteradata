@@ -107,7 +107,7 @@ While this project is small, the method signatures can be found below. If this s
 
 |
 
-**extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata", columns = [], clean_and_serialize="feather", partition_key="", partition_type="year")**
+**extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata", columns = [], clean_and_serialize="feather", partition_key="", partition_type="year", primary_keys=[], meta_table="", where_clause="")**
 
 *Summary*
 
