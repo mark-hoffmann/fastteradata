@@ -64,7 +64,7 @@ def _process_metadata_fexp(df,partition_key=""):
                 #nums = df.loc[i,"ColumnFormat"].replace("-","").replace("(","").strip().split(")")
                 #MAKE SURE TO HANDLE DATE CASE WHEN APPENDING STRINGS for parentheses
                 data_types.append("DATE FORMAT 'YYYY-MM-DD') AS CHAR(10)")
-                dtype_dict[df.loc[i,"ColumnName"]] = "date"
+                dtype_dict[df.loc[i,"ColumnName"]] = "str"
 
             #Check for correct data type of parition key of Date
             if df.loc[i,"ColumnName"] == partition_key:
