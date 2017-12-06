@@ -99,7 +99,7 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
             else:
                 #If we are doing a horizontal concat we will read into memory and combine
                 #This is because windows does not have a cood command in command prompt to do this operation as opposed to linux paste command
-                _df = concat_files_horizontal(data_file, data_files, col_list, primary_keys)
+                _df = concat_files_horizontal(data_file, data_files, col_list, primary_keys, dtype_dict)
                 col_list = _df.columns.tolist()
 
 
