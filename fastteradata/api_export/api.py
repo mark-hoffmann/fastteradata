@@ -11,7 +11,7 @@ from ..file_processors.io_processors import *
 from ..metadata_processors.metadata_processors import *
 
 
-def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata", columns = [], clean_and_serialize="feather", partition_key="", partition_type="year", primary_keys=[], meta_table="", where_clause=""):
+def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata", columns = [], clean_and_serialize="feather", partition_key="", partition_type="year", primary_keys=[], meta_table="", where_clause="", s=-1):
     """
         Summary:
             Extracts table information from Teradata and saves / executes the appropriate files
@@ -30,7 +30,8 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
                                     up extremely large datasets or increase speed. When a parition key is defined, after all of the partition files are finished loading from Teradata, the resulting data
                                     is COMBINED into a SINGLE DATA FILE and finishes processing through the following cleaning, data type specification, and serializing.
             partition_type (str): *default = 'year'* Default is to partition the partition_key by distict YEAR. Valid options include "year" or "month"
-
+            s (int): *default = -1* The default of -1 means no updates. Otherwise, you can specificy a specific frequency (number of minutes) to give an export status update.
+            
         Returns:
             Column list recieved from the metadata if clean_and_pickle is set to False, else nothing. Column names are returned in this case so you can save them and use them to read the raw data file
                 later with appropriate columns.
@@ -60,9 +61,14 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
         #Can only execute in parrelel from command line in windows, won't execute from jupyter notebooks on a windows machine
         #So we only parrelelize if we see we are on linux
         import subprocess
-        for f in fexp_scripts:
-            print(f"Calling Fast Export on file...  {f}")
-            subprocess.call(f"fexp < {f}", shell=True)
+        if s != -1:
+            for f in fexp_scripts:
+                print(f"Calling Fast Export on file...  {f}")
+                subprocess.call(f"fexp < {f}", shell=True)
+        else:
+            for f in fexp_scripts:
+                print(f"Calling Fast Export on file...  {f}")
+                subprocess.call(f"fexp < {f} -s " + s, shell=True)
         #Parrelel execution needs to be further worked out. Not behaving as expected so we will come back to it later
         """
         if os.name == "nt":
