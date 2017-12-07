@@ -119,11 +119,11 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
                 #If it's false, that means that we already have it in memory from doing a horizontal combining
                 _df = pd.DataFrame()
                 try:
-                    _df = pd.read_csv(data_file, names=col_list, sep="|", dtype=dtype_dict)
+                    _df = pd.read_csv(data_file, names=col_list, sep="|", dtype=dtype_dict, na_values=["?","","~","!"])
                 except Exception as e:
                     pass
                 if len(_df) == 0:
-                    _df = pd.read_csv(data_file, names=col_list, sep="|", dtype=dtype_dict, encoding='latin1')
+                    _df = pd.read_csv(data_file, names=col_list, sep="|", dtype=dtype_dict, na_values=["?","","~","!"], encoding='latin1')
 
             print("Cleaning data...")
             for col in _df.columns.tolist():
@@ -133,20 +133,16 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
                         _df[col] = _df[col].apply(lambda x: np.nan if pd.isnull(x) else x.strip())
                     except:
                         pass
-                    _df[col] = _df[col].apply(lambda x: np.nan if pd.isnull(x) else np.nan if ('missing' in x.lower()) else x)
-            _df.replace("~",np.nan,inplace=True)
-            _df.replace("!",np.nan,inplace=True)
-            _df.replace("?",np.nan,inplace=True)
-            _df.replace("",np.nan,inplace=True)
 
             #Try to find date looking columns and cast them appropriately (We know the format of the date because we are explicit about it in the fastexport script)
             #Try to find id columns and convert to strings proactively
             for col in _df.columns.tolist():
-                if "_dt" in col:
-                    try:
-                        _df[col] =  pd.to_datetime(_df[col], format='%Y-%m-%d')
-                    except:
-                        pass
+                if clean_and_serialize != "feather":
+                    if "_dt" in col:
+                        try:
+                            _df[col] =  pd.to_datetime(_df[col], format='%Y-%m-%d')
+                        except:
+                            pass
                 if (("_id" in col) or ("_key" in col) or ("_cd" in col)):
                     try:
                         #print("before force string")
@@ -154,6 +150,14 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
                         #print("after force string")
                     except:
                         pass
+
+            print("Getting rid of any NaN exclusive columns")
+            to_drop = []
+            for col in _df.columns.tolist():
+                if _df[col].isnull().all():
+                    to_drop.append(col)
+            _df.drop(to_drop, axis=1, inplace=True)
+            
             print("Serializing data....")
             if clean_and_serialize == "feather":
                 _df.to_feather(f"{abs_path}/serialized/{table_name}.feather")

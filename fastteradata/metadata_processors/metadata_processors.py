@@ -59,7 +59,7 @@ def _process_metadata_fexp(df,partition_key=""):
                 if len(dec_form) > 0:
                     dec_form = "." + dec_form
                 data_types.append(f"DECIMAL({dec_digits},{dec_fractional}) FORMAT 'Z{form}{dec_form}') AS CHAR({chars})")
-                dtype_dict[df.loc[i,"ColumnName"]] = "str"
+                dtype_dict[df.loc[i,"ColumnName"]] = "float"
             else:
                 #nums = df.loc[i,"ColumnFormat"].replace("-","").replace("(","").strip().split(")")
                 #MAKE SURE TO HANDLE DATE CASE WHEN APPENDING STRINGS for parentheses

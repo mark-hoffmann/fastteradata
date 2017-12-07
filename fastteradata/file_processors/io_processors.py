@@ -109,11 +109,11 @@ def concat_files_horizontal(data_file, data_files, col_list, primary_keys, dtype
         #print(primary_keys)
         df = pd.DataFrame()
         try:
-            df = pd.read_csv(d_file, names=clist, sep="|", dtype=dtype_dict)
+            df = pd.read_csv(d_file, names=clist, sep="|", dtype=dtype_dict, na_values=["?","","~","!"])
         except:
             pass
         if len(df) == 0:
-            df = pd.read_csv(d_file, names=clist, sep="|", dtype=dtype_dict, encoding='latin1')
+            df = pd.read_csv(d_file, names=clist, sep="|", dtype=dtype_dict, na_values=["?","","~","!"], encoding='latin1')
         #print(df)
         if len(_df) == 0:
             _df = df
