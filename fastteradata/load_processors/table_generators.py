@@ -60,3 +60,14 @@ def prep_load_table(df, table_name, env, db, connector, clear_table):
         print("It is recomended to fast load whole tables")
 
     return
+
+def create_metadata_table(view, destination, env, connector):
+    conn = connect_teradata(env, connector)
+
+    try:
+        conn.execute(f"drop table {destination};")
+    except:
+        pass
+    conn.execute(f"create table {destination} as (select top 1 * from {view}) with no data")
+
+    return
