@@ -203,7 +203,7 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
 
     #Making changes here to accomodate horizontal scaling. To start off, we will just check that if we need to do horizontal scaling, you will not be able to use a partition Key
     did_partition = False  #Partition flag to pass through for appropriate processing
-    MAX_COLS = 90
+    MAX_COLS = 110
     tot_columns = len(meta_df["ColumnName"].apply(lambda x: x.lower().strip()).unique())
 
     unique_partitions = []
