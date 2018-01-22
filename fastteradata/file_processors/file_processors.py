@@ -60,7 +60,7 @@ def get_unique_partitions(env,db,table,auth_dict=auth_dict,custom_auth=False,con
 
 
 def generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, meta_df, columns=[], nrows=-1,
-                      partition_key="", current_partition="", partition_type="", orderby=[], meta_table="", where_clause=""):
+                      partition_key="", current_partition="", partition_type="", orderby=[], meta_table="", where_clause="",suppress_text=False):
     #print("in generage_sql_main")
     #print(partition_key)
     log_table = db
@@ -95,9 +95,10 @@ def generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, 
             else:
                 tot_chars += int(meta_df.loc[i,"ColumnLength"] + 1)
             col_list.append(meta_df.loc[i,"ColumnName"])
-        print("COLUMN LIST")
-        print(col_list)
-        print(select_string)
+        if suppress_text == False:
+            print("COLUMN LIST")
+            print(col_list)
+            print(select_string)
     else:
         for i in range(0,len(columns)):
             end = False
@@ -170,7 +171,8 @@ def coalesce_statement(var, dtype, end=False):
 
 def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=auth_dict,
                            custom_auth=False, nrows=-1,connector="teradata",
-                           partition_key="", partition_type="year", execute=True, primary_keys=[], meta_table="", where_clause=""):
+                           partition_key="", partition_type="year", execute=True, primary_keys=[], meta_table="",
+                           where_clause="", suppress_text=False):
     """
         Summary:
             Parses the information for a valid database table and writes script to output file
@@ -187,6 +189,7 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
                                 you must flag custom_auth = True and pass in ("usrname","passw") as such like a tuple into auth_dict
             custom_auth (bool): default False, if you want to pass your own creds in, you must flag this as True and pass in a tuple into the auth dict
             nrows (int): Number of rows you want your script to generate, default is all (*)
+            suppress_test: Allows suppression of the sql text generated.
 
         Returns:
             Pandas DataFrame containing columns DatabaseName, TableName, ColumnName, ColumnFormat, ColumnLength, CharType
@@ -221,7 +224,7 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
     file_name = table
     if did_partition == False and partition_key == "" and tot_columns <= MAX_COLS:
         _fname = file_name + "_export.txt"
-        final, col_list = generate_sql_main(export_path, _fname, env_short, usr, passw, db, table, meta_df, columns=columns, nrows=nrows, meta_table=meta_table, where_clause=where_clause)
+        final, col_list = generate_sql_main(export_path, _fname, env_short, usr, passw, db, table, meta_df, columns=columns, nrows=nrows, meta_table=meta_table, where_clause=where_clause, suppress_text = suppress_text)
         #Save fast export file
         script_path = save_file(export_path, _fname, final)
         fast_export_scripts.append(script_path)
@@ -229,7 +232,7 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
         #process the normal vertical partitioning
         for part in unique_partitions:
             _fname = file_name + "_" + str(part) + "_export.txt"
-            final, col_list = generate_sql_main(export_path, _fname, env_short, usr, passw, db, table, meta_df, columns=columns, nrows=nrows, partition_key=partition_key, current_partition=part, partition_type=partition_type, meta_table=meta_table, where_clause=where_clause)
+            final, col_list = generate_sql_main(export_path, _fname, env_short, usr, passw, db, table, meta_df, columns=columns, nrows=nrows, partition_key=partition_key, current_partition=part, partition_type=partition_type, meta_table=meta_table, where_clause=where_clause, suppress_text = suppress_text)
             #Save fast export file
             script_path = save_file(export_path, _fname, final)
             fast_export_scripts.append(script_path)
@@ -251,7 +254,7 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
             cols = col_lookup(meta_df, i, tot_columns, MAX_COLS) + primary_keys  #use the columns in our iteration and add on the specified primary keys so that we can recombine later
             cols = list(set(cols)) #reduce the columns to unique if one of our primary keys is repeated
             _fname = file_name + "_" + str(i) + "_export.txt"
-            final, this_col_list = generate_sql_main(export_path, _fname, env_short, usr, passw, db, table, meta_df, columns=cols, nrows=nrows, orderby=primary_keys, meta_table=meta_table, where_clause=where_clause)
+            final, this_col_list = generate_sql_main(export_path, _fname, env_short, usr, passw, db, table, meta_df, columns=cols, nrows=nrows, orderby=primary_keys, meta_table=meta_table, where_clause=where_clause, suppress_text = suppress_text)
             col_list.append(this_col_list) #Since this case will have multiple col_lists, we create a list of lists to pass through
             #Save fast export file
             script_path = save_file(export_path, _fname, final)
