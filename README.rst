@@ -141,6 +141,8 @@ meta_table (str): *default = ""* This is used if you want to override what table
 
 where_clause (str): *default = ""* Where clause to use in sql generated scripts. Do not need to add WHERE  ex. "col1 > 15"
 
+distinct (bool): *default = False* Whether to put a distinct keyword in the select statement 
+
 *Returns*
 
 Column list received from the metadata if clean_and_serialize is set to False, else nothing. Column names are returned in this case so you can save them and use them to read the raw data file later with appropriate columns.
