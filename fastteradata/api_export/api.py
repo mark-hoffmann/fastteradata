@@ -11,7 +11,7 @@ from ..file_processors.io_processors import *
 from ..metadata_processors.metadata_processors import *
 
 
-def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata", columns = [], clean_and_serialize="feather", partition_key="", partition_type="year", primary_keys=[], meta_table="", where_clause="", suppress_text="False"):
+def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata", columns = [], clean_and_serialize="feather", partition_key="", partition_type="year", primary_keys=[], meta_table="", where_clause="", suppress_text="False", distinct=False):
     """
         Summary:
             Extracts table information from Teradata and saves / executes the appropriate files
@@ -31,7 +31,7 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
                                     is COMBINED into a SINGLE DATA FILE and finishes processing through the following cleaning, data type specification, and serializing.
             partition_type (str): *default = 'year'* Default is to partition the partition_key by distict YEAR. Valid options include "year" or "month"
             suppress_text(bool): *default = 'False'* Default is not to suppress the fast export SQL text.
-   
+
         Returns:
             Column list recieved from the metadata if clean_and_pickle is set to False, else nothing. Column names are returned in this case so you can save them and use them to read the raw data file
                 later with appropriate columns.
@@ -52,7 +52,7 @@ def extract_table(abs_path, table_name, env, db, nrows=-1, connector = "teradata
         print(f"Starting process for: {db}.{table_name}")
         script_name = table_name
         print("Grabbing meta data and generating fast export file...")
-        col_list, fexp_scripts, did_partition, dtype_dict = parse_sql_single_table(abs_path, env,db,table_name, nrows=nrows, connector=connector, columns = columns, partition_key=partition_key, partition_type=partition_type, primary_keys=primary_keys, meta_table=meta_table, where_clause=where_clause, suppress_text=suppress_text)
+        col_list, fexp_scripts, did_partition, dtype_dict = parse_sql_single_table(abs_path, env,db,table_name, nrows=nrows, connector=connector, columns = columns, partition_key=partition_key, partition_type=partition_type, primary_keys=primary_keys, meta_table=meta_table, where_clause=where_clause, suppress_text=suppress_text, distinct=distinct)
 
         #FOR MULTIPROCESSING WHEN PUT INTO A PACKAGE
         from .multiprocess import call_sub

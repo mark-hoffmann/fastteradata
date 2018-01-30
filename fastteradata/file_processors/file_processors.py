@@ -60,7 +60,7 @@ def get_unique_partitions(env,db,table,auth_dict=auth_dict,custom_auth=False,con
 
 
 def generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, meta_df, columns=[], nrows=-1,
-                      partition_key="", current_partition="", partition_type="", orderby=[], meta_table="", where_clause="",suppress_text=False):
+                      partition_key="", current_partition="", partition_type="", orderby=[], meta_table="", where_clause="",suppress_text=False, distinct=False):
     #print("in generage_sql_main")
     #print(partition_key)
     log_table = db
@@ -73,9 +73,12 @@ def generate_sql_main(export_path, file_name, env_short, usr, passw, db, table, 
     export_string = ".BEGIN EXPORT; \n\n .EXPORT OUTFILE " + export_path + "/data/" + file_name + " \n MODE RECORD FORMAT TEXT;\n\n"
 
     #Step 3
-    select_string = "SELECT CAST(\n"
+    distinct_str = ""
+    if distinct:
+        distinct_str = "DISTINCT"
+    select_string = f"SELECT {distinct_str} CAST(\n"
     if nrows > 0:
-        select_string = f"SELECT TOP {nrows} CAST(\n"
+        select_string = f"SELECT {distinct_str} TOP {nrows} CAST(\n"
     #Loop through and fill out the coalesce statements
     tot_chars = 0
 
@@ -172,7 +175,7 @@ def coalesce_statement(var, dtype, end=False):
 def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=auth_dict,
                            custom_auth=False, nrows=-1,connector="teradata",
                            partition_key="", partition_type="year", execute=True, primary_keys=[], meta_table="",
-                           where_clause="", suppress_text=False):
+                           where_clause="", suppress_text=False, distinct=False):
     """
         Summary:
             Parses the information for a valid database table and writes script to output file
@@ -254,7 +257,7 @@ def parse_sql_single_table(export_path, env, db, table, columns=[], auth_dict=au
             cols = col_lookup(meta_df, i, tot_columns, MAX_COLS) + primary_keys  #use the columns in our iteration and add on the specified primary keys so that we can recombine later
             cols = list(set(cols)) #reduce the columns to unique if one of our primary keys is repeated
             _fname = file_name + "_" + str(i) + "_export.txt"
-            final, this_col_list = generate_sql_main(export_path, _fname, env_short, usr, passw, db, table, meta_df, columns=cols, nrows=nrows, orderby=primary_keys, meta_table=meta_table, where_clause=where_clause, suppress_text = suppress_text)
+            final, this_col_list = generate_sql_main(export_path, _fname, env_short, usr, passw, db, table, meta_df, columns=cols, nrows=nrows, orderby=primary_keys, meta_table=meta_table, where_clause=where_clause, suppress_text = suppress_text, distinct=distinct)
             col_list.append(this_col_list) #Since this case will have multiple col_lists, we create a list of lists to pass through
             #Save fast export file
             script_path = save_file(export_path, _fname, final)
