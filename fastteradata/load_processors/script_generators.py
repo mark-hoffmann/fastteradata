@@ -20,8 +20,16 @@ def generate_fastload_script(abs_path, df, table_name, env, db):
     beginning_string = f"logon {env_n}/{usr},{passw};\n\nSET RECORD VARTEXT '|';\nRECORD 2;\nDEFINE\n"
 
     define_string = ""
-    for col in df.columns.tolist():
-        define_string += f"{col} (VARCHAR(90)),\n"
+    col_type_zip = zip(df.columns.tolist(),df.dtypes.tolist())
+    for col, col_type in col_type_zip:
+        if col_type.str == "|O":
+            try:
+                size = df[col].map(len).max()
+                define_string += f"{col} (VARCHAR({size})),\n"
+            except:
+                define_string += f"{col} (VARCHAR(90)),\n"
+        else:
+            define_string += f"{col} (VARCHAR(90)),\n"
 
     file_delim = ""
     if os.name == "nt":
@@ -37,7 +45,7 @@ def generate_fastload_script(abs_path, df, table_name, env, db):
         insert_string += f": {col}"
         if col != df.columns.tolist()[-1]:
             insert_string += ",\n"
-    insert_string += ");\nEND LOADING;"
+    insert_string += ");\nEND LOADING;\nLOGOFF;"
 
 
     final_string = beginning_string + define_string + table_string + insert_string
