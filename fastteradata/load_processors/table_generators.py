@@ -37,7 +37,10 @@ def prep_load_table(df, table_name, env, db, connector, clear_table):
         t = ""
 
         if col_type.str == "|O":
-            t = "varchar(80) "
+            try:
+                t = "varchar({}) ".format(df[col].map(len).max())
+            except:
+                t = "varchar(90) "
         elif (("<M8" in col_type.str) or ("datetime" in col_type.str)):
             t = "date format 'YYYY-MM-DD' "
         else:
